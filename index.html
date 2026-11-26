@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TravelFlow — учёт командировок</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#1E6FD9;--blue-d:#1559B3;--blue-l:#DCE9F8;--blue-xl:#F2F7FD;--bg:#E2EDF8;--text:#141C26;--muted:#6B7787;--line:#E4E9F0;--line2:#C9D2DC;
+  --green:#52BE5C;--grey:#7D8985;--violet:#6E7ED6;--orange:#EFA03A;--red:#E05656;--draft:#AEB8C4;--r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);background:var(--bg);font-size:14px;-webkit-font-smoothing:antialiased}
+body.noscroll{overflow:hidden}
+button{font:inherit;cursor:pointer;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+a{color:var(--blue)}
+.app{display:flex;min-height:100vh}
+
+/* sidebar */
+.sidebar{width:236px;background:#fff;flex-shrink:0;padding:22px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;z-index:30}
+.logo{display:flex;align-items:center;gap:4px;font-weight:800;font-size:21px;letter-spacing:-.4px;padding:0 4px 30px;color:#111;text-decoration:none}
+.logo svg{width:48px;height:34px;flex-shrink:0}
+.nav a{display:block;padding:9px 14px;border-radius:12px;font-weight:700;color:#111;text-decoration:none;margin-bottom:8px;font-size:15px;transition:background .15s}
+.nav a:hover{background:var(--blue-xl)}
+.nav a.active{background:var(--blue-l);color:var(--blue);margin-left:14px;margin-right:6px;text-align:center}
+.side-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px;border-top:1px solid var(--line);font-size:13px}
+.side-user b{display:block;font-size:13px}
+.side-user div span{color:var(--muted);font-size:12px}
+.topbar{display:none}
+.backdrop{display:none}
+
+/* main */
+.main{flex:1;padding:28px 34px 48px;min-width:0}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.page-head h1{margin:0;color:var(--blue);font-size:30px;font-weight:800;letter-spacing:-.6px;line-height:1.15}
+.page-head h1 a{color:inherit;text-decoration:none}
+.page-head h1 a:hover{text-decoration:underline}
+.sub{font-size:13px;color:#333;margin-top:5px}
+.btn{border:none;border-radius:12px;padding:9px 18px;font-weight:600;background:var(--blue);color:#fff;transition:background .15s,transform .1s;white-space:nowrap}
+.btn:hover{background:var(--blue-d)}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:#fff;color:var(--blue);border:1px solid #BCD0EA}
+.btn.ghost:hover{background:var(--blue-xl)}
+.btn.danger{background:var(--red)}.btn.danger:hover{background:#c64545}
+.btn.success{background:var(--green)}.btn.success:hover{background:#41a54b}
+.btn.sm{padding:6px 12px;font-size:13px;border-radius:10px}
+.btn.block{width:100%}
+.btn.plain{background:none;color:var(--blue);padding:6px 8px}
+.btn.plain:hover{background:var(--blue-xl)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.stat{background:#fff;border-radius:12px;padding:10px 16px 12px;border:2px solid transparent;transition:.15s;text-align:left}
+.stat:hover{border-color:#BCD0EA;transform:translateY(-1px)}
+.stat .l{font-size:11px;color:#333}
+.stat .v{font-size:26px;font-weight:700;text-align:center;margin-top:2px;letter-spacing:-.5px}
+.stat.primary{background:var(--blue);color:#fff}
+.stat.primary .l{color:#E3EEFF}
+.stat.primary:hover{border-color:#0d4b9c}
+
+.card{background:#fff;border-radius:var(--r);padding:20px 22px;margin-bottom:18px}
+.card h2{margin:0 0 14px;font-size:20px;font-weight:600}
+.card h3{margin:0 0 12px;font-size:16px;font-weight:600}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.card-head h2,.card-head h3{margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid2 .card{margin-bottom:0}
+
+table{width:100%;border-collapse:collapse}
+th{font-weight:500;color:#555;font-size:12px;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line2);white-space:nowrap}
+td{padding:11px 10px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+td.num,th.num{text-align:right;white-space:nowrap}
+td.c,th.c{text-align:center}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--blue-xl)}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.nowrap{white-space:nowrap}
+.empty{padding:34px 10px;text-align:center;color:var(--muted)}
+
+.pill{display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;color:#fff;border:2px solid rgba(0,0,0,.14);white-space:nowrap;line-height:1.3}
+.s-draft{background:var(--draft)}.s-approval{background:var(--violet)}.s-planned{background:var(--orange)}
+.s-active{background:var(--green)}.s-done{background:var(--grey)}.s-rejected{background:var(--red)}.s-cancelled{background:#9AA3AD}
+
+.av{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0}
+.who{display:flex;align-items:center;gap:10px}
+.who .av{width:28px;height:28px;font-size:11px}
+
+.toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line2);background:#fff;border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500}
+.chip span{color:var(--muted);margin-left:2px}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip.on span{color:#d6e6ff}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.inp{border:1px solid #B8C3CF;border-radius:6px;padding:7px 10px;background:#fff;min-height:36px;width:100%}
+.inp:focus{outline:2px solid #9cc2f2;outline-offset:0;border-color:var(--blue)}
+.inp.err{border-color:var(--red);background:#fff6f6}
+.tools .inp{width:auto;min-width:200px}
+textarea.inp{resize:vertical;min-height:70px}
+label.f{display:block;font-size:13px;margin-bottom:5px;color:#222}
+.field{margin-bottom:12px}
+.ferr{color:var(--red);font-size:12px;margin-top:4px;display:none}
+.field.bad .ferr{display:block}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.arrow-row{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:6px}
+.arrow-row .ar{text-align:center;font-size:20px;color:#333}
+.hint{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* trip form */
+.form-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:20px;align-items:start}
+.summary{position:sticky;top:20px}
+.summary h3{font-size:17px;font-weight:700;margin:0 0 10px}
+.sumrow{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;gap:8px}
+.sumrow span:first-child{color:#444}
+.sumrow.total{border-top:1px solid #333;margin-top:10px;padding-top:10px;font-weight:700;font-size:15px}
+.warn{background:#FFF4E2;color:#8a5600;border-radius:8px;padding:8px 10px;font-size:12px;margin-top:10px}
+.okbox{background:#E9F7EB;color:#2b6b32;border-radius:8px;padding:8px 10px;font-size:12px;margin-top:10px}
+.summary .btn{margin-top:10px}
+
+/* dossier */
+.dos-head{display:flex;gap:16px;align-items:center;margin:8px 0 14px}
+.dos-av{width:86px;height:86px;border-radius:10px;font-size:28px}
+.dos-head .nm{font-weight:600;font-size:15px}
+.dos-head div div{font-size:13px;margin-top:3px}
+.tabs{display:flex;justify-content:space-between;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:5px 10px;gap:4px;overflow-x:auto}
+.tab{background:none;border:none;padding:5px 14px;border-radius:7px;font-size:13px;white-space:nowrap}
+.tab:hover{background:var(--blue-xl)}
+.tab.on{background:var(--blue);color:#fff}
+.dos-grid{display:grid;grid-template-columns:minmax(0,1fr) 250px}
+.dos-main{padding:14px 18px 6px 4px}
+.dos-side{border-left:1px solid var(--line2);padding:14px 0 6px 16px;font-size:12px}
+.dos-side h4{color:var(--blue);text-align:center;margin:0 0 10px;font-weight:600;font-size:14px}
+.kv{display:flex;gap:10px;font-size:13px;padding:3px 0}
+.kv span:first-child{color:#555;min-width:130px}
+.sec-t{font-weight:600;margin:14px 0 6px;font-size:14px}
+.sec-t:first-child{margin-top:0}
+.st-line{display:flex;justify-content:space-between;padding:3px 0;gap:8px}
+.st-line b{font-weight:600}
+.gap{height:12px}
+.doc-item{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.doc-ic{width:34px;height:40px;border-radius:5px;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.doc-item .t{flex:1;min-width:0}
+.doc-item .t div:first-child{font-weight:500}
+.perm{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.perm input{width:18px;height:18px;accent-color:var(--blue)}
+.timeline{list-style:none;margin:0;padding:0}
+.timeline li{position:relative;padding:0 0 14px 22px;font-size:13px}
+.timeline li:before{content:"";position:absolute;left:4px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--blue)}
+.timeline li:after{content:"";position:absolute;left:8px;top:16px;bottom:0;width:1px;background:var(--line2)}
+.timeline li:last-child:after{display:none}
+.timeline .d{font-size:11px;color:var(--muted)}
+
+/* reports */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.kpi{background:#fff;border-radius:12px;padding:14px 16px}
+.kpi .l{font-size:12px;color:#555}
+.kpi .v{font-size:24px;font-weight:700;margin-top:4px;letter-spacing:-.4px}
+.kpi .d{font-size:11px;color:var(--muted);margin-top:2px}
+.months{display:flex;align-items:flex-end;gap:8px;height:190px;padding-top:20px}
+.mcol{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;min-width:0}
+.mbar{width:100%;max-width:36px;background:#B9D3F2;border-radius:6px 6px 2px 2px;position:relative;min-height:2px;transition:background .15s}
+.mbar.cur{background:var(--blue)}
+.mcol:hover .mbar{background:var(--blue-d)}
+.mval{font-size:10px;color:#444;margin-bottom:4px;white-space:nowrap}
+.mlab{font-size:11px;color:var(--muted);margin-top:6px}
+.hbar{margin-bottom:10px}
+.hbar .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;gap:10px}
+.hbar .trk{height:10px;background:#EEF3F9;border-radius:6px;overflow:hidden}
+.hbar .fill{height:100%;background:var(--blue);border-radius:6px}
+.stack{display:flex;height:18px;border-radius:9px;overflow:hidden;margin:6px 0 12px}
+.legend{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.legend div{display:flex;align-items:center;gap:8px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.legend b{margin-left:auto;font-weight:600}
+
+/* settings */
+.set-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.set-grid .card{margin-bottom:0}
+.switch{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);gap:12px;font-size:13px}
+.switch input{appearance:none;width:40px;height:22px;border-radius:12px;background:#C8D1DB;position:relative;cursor:pointer;transition:.2s;flex-shrink:0}
+.switch input:before{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
+.switch input:checked{background:var(--blue)}
+.switch input:checked:before{left:21px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(15,30,50,.45);display:flex;align-items:flex-start;justify-content:center;padding:40px 14px;z-index:100;overflow-y:auto;animation:fade .15s}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:620px;padding:22px 24px;box-shadow:0 20px 50px rgba(0,0,0,.2);animation:pop .18s}
+.modal.wide{max-width:780px}
+.modal.narrow{max-width:440px}
+.m-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.m-head h2{margin:0;font-size:20px}
+.x{background:none;border:none;font-size:24px;line-height:1;color:#777;padding:0 4px}
+.x:hover{color:#000}
+.m-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-bottom:14px}
+.info-grid .lb{font-size:11px;color:var(--muted)}
+.info-grid .vl{font-size:14px;font-weight:500;margin-top:2px}
+.costbox{background:var(--blue-xl);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.doc-paper{border:1px solid var(--line2);border-radius:8px;padding:26px 30px;font-family:"Times New Roman",Times,serif;font-size:15px;line-height:1.5;color:#111;background:#fffef9}
+.doc-paper h4{text-align:center;margin:12px 0 2px;font-size:16px}
+.doc-paper .ctr{text-align:center}
+.doc-paper table td,.doc-paper table th{border:1px solid #999;padding:5px 8px;font-size:14px}
+.doc-paper .sign{display:flex;justify-content:space-between;margin-top:22px}
+.menu{position:fixed;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:6px;z-index:90;min-width:200px;animation:pop .12s}
+.menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:8px 12px;border-radius:7px;font-size:13px}
+.menu button:hover{background:var(--blue-xl)}
+.menu button.del{color:var(--red)}
+.dots{background:none;border:none;font-size:18px;padding:2px 8px;border-radius:6px;line-height:1;color:#333}
+.dots:hover{background:var(--blue-l)}
+.toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:#17212D;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;box-shadow:0 8px 20px rgba(0,0,0,.2);animation:pop .2s}
+.toast.ok{background:#2D8A3A}.toast.bad{background:#C64545}
+.mini-list .it{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.mini-list .it:last-child{border-bottom:none}
+.mini-list .grow{flex:1;min-width:0}
+.mini-list .grow div:first-child{font-weight:500}
+.link{background:none;border:none;color:var(--blue);padding:0;font-weight:500}
+.link:hover{text-decoration:underline}
+@keyframes fade{from{opacity:0}}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}}
+
+/* responsive */
+@media (max-width:1100px){
+  .stats,.kpis{grid-template-columns:repeat(2,1fr)}
+  .dos-grid{grid-template-columns:1fr}
+  .dos-side{border-left:none;border-top:1px solid var(--line2);padding:14px 4px}
+}
+@media (max-width:900px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .2s}
+  .sidebar.open{transform:none;box-shadow:0 0 30px rgba(0,0,0,.2)}
+  .backdrop.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:25}
+  .topbar{display:flex;align-items:center;justify-content:space-between;background:#fff;padding:8px 14px;position:sticky;top:0;z-index:20;box-shadow:0 1px 0 var(--line)}
+  .topbar .logo{padding:0;font-size:18px}
+  .burger{background:none;border:none;font-size:24px;padding:4px 8px}
+  .app{flex-direction:column}
+  .main{padding:18px 14px 40px}
+  .page-head h1{font-size:24px}
+  .form-layout,.grid2,.set-grid{grid-template-columns:1fr}
+  .summary{position:static}
+  .card{padding:16px}
+  .tools .inp{min-width:0;flex:1}
+  .info-grid{grid-template-columns:1fr}
+  .modal{padding:18px}
+  .overlay{padding:16px 8px}
+  .doc-paper{padding:16px}
+}
+@media (max-width:480px){
+  .stat .v{font-size:22px}
+  .row2{grid-template-columns:1fr}
+  .tabs{justify-content:flex-start}
+  .kv span:first-child{min-width:110px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <a class="logo" href="#home" id="logoTop"></a>
+    <button class="burger" data-act="menu-toggle" aria-label="Меню">☰</button>
+  </div>
+  <div class="backdrop" data-act="menu-toggle"></div>
+  <aside class="sidebar" id="sidebar">
+    <a class="logo" href="#home" id="logoSide"></a>
+    <nav class="nav" id="nav">
+      <a href="#home" data-view="home">Главная</a>
+      <a href="#trips" data-view="trips">Командировки</a>
+      <a href="#employees" data-view="employees">Сотрудники</a>
+      <a href="#reports" data-view="reports">Отчёты</a>
+      <a href="#config" data-view="config">Настройки</a>
+    </nav>
+    <div class="side-user" id="sideUser"></div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ============ helpers ============ */
+const LOGO = `<svg viewBox="0 0 48 34" aria-hidden="true"><path fill="#111" d="M3 27.5c6-1.2 12.5-3.6 19.5-7.4l10.8-6.2c4.3-2.5 8.5-4.4 11-4.6 1.4-.1 1.6.9.6 1.9-1.7 1.7-5.6 4.2-9.6 6.4L24 23.8l-3.6 7.6-2.7.8 1.6-6.5-7 2.9-2.8 2.6-1.8.3 1.1-3.3c-2 .4-4 .3-5.8-.7zM14.5 15.6l2.2-1.3 9.4 1.1-4.6 2.6zM27 9.6l2.5-1.4 3.2 2.6-2.6 1.4z"/></svg>TravelFlow`;
+const $ = s => document.querySelector(s);
+const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const pd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const fd = s => s ? s.split('-').reverse().join('.') : '—';
+const fds = s => { const p = s.split('-'); return p[2]+'.'+p[1]; };
+const addDays = (s,n) => { const d = pd(s); d.setDate(d.getDate()+n); return iso(d); };
+const diffDays = (a,b) => Math.round((pd(b)-pd(a))/864e5);
+const money = n => Math.round(n||0).toLocaleString('ru-RU') + ' ₽';
+const plural = (n,f) => { n = Math.abs(n)%100; const n1 = n%10; if (n>10&&n<20) return f[2]; if (n1>1&&n1<5) return f[1]; if (n1===1) return f[0]; return f[2]; };
+const daysW = n => n + ' ' + plural(n, ['день','дня','дней']);
+const shortMoney = n => n >= 1e6 ? (n/1e6).toFixed(2).replace('.',',') + ' млн ₽' : n >= 1e4 ? Math.round(n/1e3) + ' тыс ₽' : money(n);
+const MONTHS = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MONTHS_SH = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const fdLong = s => { const d = pd(s); return `«${pad(d.getDate())}» ${MONTHS_GEN[d.getMonth()]} ${d.getFullYear()} г.`; };
+const TODAY = (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
+const T = iso(TODAY);
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+const DEPTS = ['Администрация','Бухгалтерия','Клиентский отдел','Отдел дизайна','Отдел маркетинга','Отдел продаж','Технический отдел'];
+const ROLES = {employee:'Сотрудник', manager:'Руководитель', accountant:'Бухгалтер', admin:'Администратор'};
+const PERMS = {create:'Создание заявок на командировки', approve:'Согласование заявок', reports:'Просмотр отчётов', manage:'Управление сотрудниками'};
+const ROLE_PERMS = {employee:['create'], manager:['create','approve','reports'], accountant:['create','reports'], admin:['create','approve','reports','manage']};
+const TRANSPORT = ['Поезд','Самолёт','Автобус','Автомобиль'];
+const CITIES = {'Москва':1170,'Санкт-Петербург':1800,'Казань':520,'Сочи':2000,'Екатеринбург':450,'Якутск':5000,'Новосибирск':1900,'Самара':460,'Пермь':480,'Челябинск':400,'Оренбург':370,'Нижний Новгород':900,'Калининград':2900,'Краснодар':1600,'Ростов-на-Дону':1500,'Тюмень':700,'Омск':1300,'Красноярск':2900,'Владивосток':7300,'Мурманск':2800,'Минеральные Воды':1700,'Уфа':0};
+const STATUS = {
+  draft:{l:'Черновик',c:'s-draft'}, approval:{l:'Согласование',c:'s-approval'}, planned:{l:'Запланировано',c:'s-planned'},
+  active:{l:'В пути',c:'s-active'}, done:{l:'Завершено',c:'s-done'}, rejected:{l:'Отклонено',c:'s-rejected'}, cancelled:{l:'Отменено',c:'s-cancelled'}
+};
+const AV_COLORS = ['#1E6FD9','#6E7ED6','#2FA58B','#E07B39','#C2508F','#4C9BD6','#8A63D2','#3C8D5A','#D35A5A','#5A6B80'];
+
+/* ============ seed data ============ */
+function seed(){
+  const settings = {company:'ООО «ТрэвелФлоу»', homeCity:'Уфа', perDiem:1600, hotelLimit:6500, annualLimit:500000, autoApprove:false, autoLimit:15000,
+    notifyEmail:true, notifyApproval:true, notifyReminder:false, notifyReport:true, userName:'Администратор системы'};
+  const E = [
+    [1,'Кусь','Наталья','Мейковна','Ж','1998-09-20','Отдел дизайна','Руководитель отдела','n.kus@travelflow.ru','+7 (917) 555-35-35','2021-03-15','4417','manager',600000],
+    [2,'Дубов','Игорь','Сергеевич','М','2000-03-12','Технический отдел','Инженер-техник','i.dubov@travelflow.ru','+7 (927) 301-44-18','2022-08-01','2290','employee',400000],
+    [3,'Птица','Ольга','Викторовна','Ж','1995-12-31','Отдел маркетинга','Маркетолог','o.ptitsa@travelflow.ru','+7 (917) 420-11-09','2023-02-06','8831','employee',450000],
+    [4,'Гарипов','Тимур','Ренатович','М','1993-06-04','Отдел продаж','Менеджер по продажам','t.garipov@travelflow.ru','+7 (937) 158-60-72','2020-11-10','5106','employee',500000],
+    [5,'Соколова','Анна','Дмитриевна','Ж','1987-02-17','Бухгалтерия','Главный бухгалтер','a.sokolova@travelflow.ru','+7 (917) 702-90-31','2019-04-22','7743','accountant',300000],
+    [6,'Лебедев','Максим','Олегович','М','1990-10-08','Технический отдел','Ведущий инженер','m.lebedev@travelflow.ru','+7 (927) 640-25-57','2019-09-02','3358','employee',500000],
+    [7,'Хабибуллина','Алсу','Ильдаровна','Ж','1997-07-23','Клиентский отдел','Специалист по работе с клиентами','a.khabibullina@travelflow.ru','+7 (965) 211-08-44','2024-01-15','6620','employee',350000],
+    [8,'Морозов','Денис','Андреевич','М','1985-04-30','Отдел продаж','Руководитель отдела продаж','d.morozov@travelflow.ru','+7 (917) 333-17-90','2018-05-14','9012','manager',700000],
+    [9,'Захарова','Екатерина','Павловна','Ж','1999-11-05','Администрация','Офис-менеджер','e.zakharova@travelflow.ru','+7 (987) 488-62-13','2025-03-03','1475','employee',200000],
+    [10,'Валиев','Руслан','Маратович','М','1979-01-19','Администрация','Генеральный директор','r.valiev@travelflow.ru','+7 (917) 100-00-77','2016-02-01','0083','admin',1000000]
+  ];
+  const employees = E.map(([id,last,first,middle,gender,birth,dept,position,email,phone,hired,card4,role,limit]) => ({
+    id,last,first,middle,gender,birth,dept,position,email,phone,city:'Уфа',hired,card4,citizenship:'РФ',role,
+    perms:[...ROLE_PERMS[role]], limit, restrictions:'Отсутствуют', log:[]
+  }));
+  // [emp, to, startOffset, days, purpose, transport, tickets, hotelRate, state]
+  const R = [
+    [1,'Санкт-Петербург',-18,31,'Проект редизайна офиса партнёра','Самолёт',18400,5800,'approved'],
+    [2,'Сочи',-9,6,'Монтаж оборудования на объекте','Самолёт',16200,4500,'approved'],
+    [3,'Якутск',4,5,'Переговоры с партнёрами','Самолёт',38500,5200,'approval'],
+    [4,'Казань',-2,5,'Встреча с ключевым клиентом','Поезд',4200,3900,'approved'],
+    [6,'Екатеринбург',-1,5,'Пусконаладочные работы','Автомобиль',6000,4100,'approved'],
+    [8,'Москва',7,4,'Выставка «Бизнес-Тур»','Самолёт',14800,6500,'approved'],
+    [7,'Самара',13,3,'Обучение сотрудников клиента','Поезд',3600,3800,'approved'],
+    [5,'Москва',19,3,'Семинар по налоговому учёту','Поезд',9800,6500,'approval'],
+    [10,'Новосибирск',25,4,'Открытие филиала','Самолёт',24600,6500,'approval'],
+    [9,'Челябинск',5,2,'Закупка мебели для офиса','Автобус',2400,3200,'draft'],
+    [2,'Пермь',-45,5,'Сервисное обслуживание оборудования','Поезд',5200,3500,'approved'],
+    [1,'Москва',-36,4,'Конференция дизайнеров','Самолёт',13200,6500,'approved'],
+    [3,'Казань',-29,3,'Маркетинговое исследование рынка','Поезд',3900,3600,'approved'],
+    [8,'Сочи',-65,5,'Переговоры с поставщиком','Самолёт',17500,6100,'approved'],
+    [4,'Оренбург',-58,3,'Презентация продукта','Автомобиль',3500,3000,'approved'],
+    [6,'Москва',-16,5,'Аудит серверного оборудования','Самолёт',15100,6500,'approved'],
+    [7,'Нижний Новгород',-10,4,'Встреча с клиентом','Поезд',6800,4200,'approved'],
+    [10,'Санкт-Петербург',-23,4,'Подписание договора','Самолёт',16900,6500,'approved'],
+    [5,'Казань',-72,2,'Сверка расчётов с контрагентом','Поезд',3800,3600,'approved'],
+    [9,'Москва',-14,2,'Получение документов','Самолёт',12400,6000,'rejected'],
+    [3,'Калининград',31,4,'Форум маркетологов','Самолёт',21400,5600,'draft'],
+    [1,'Сочи',-79,5,'Фестиваль дизайна','Самолёт',15800,6500,'approved'],
+    [8,'Краснодар',-100,4,'Переговоры с дистрибьютором','Самолёт',14600,5200,'approved'],
+    [6,'Тюмень',-130,3,'Ремонт оборудования','Поезд',6200,3900,'approved'],
+    [10,'Москва',-160,3,'Отраслевой форум','Самолёт',13900,6500,'approved'],
+    [4,'Самара',10,3,'Заключение договора поставки','Поезд',4100,3800,'approved']
+  ];
+  const trips = R.map(([emp,to,off,len,purpose,transport,tickets,hotelRate,state],i) => {
+    const id = i+1, start = addDays(T,off), end = addDays(start,len-1), created = addDays(start,-(9+id%6));
+    const t = {id,emp,from:'Уфа',to,start,end,purpose,transport,tickets,hotelRate,perDiem:1600,state,fact:null,comment:'',reason:'',created,history:[]};
+    const ev = (d,x) => t.history.push({d,t:x});
+    ev(created,'Заявка создана');
+    if (state !== 'draft') ev(addDays(created,1),'Отправлена на согласование');
+    if (state === 'approved') ev(addDays(created,2),'Согласовано: Валиев Р. М.');
+    if (state === 'rejected') { t.reason = 'Документы можно получить курьерской доставкой'; ev(addDays(created,2),'Отклонено: ' + t.reason); }
+    if (state === 'approved' && end < T) {
+      ev(addDays(end,1),'Командировка завершена');
+      if (diffDays(end,T) > 3) { t.fact = Math.round(cost(t).total * (0.88 + (id*37%17)/100) / 100) * 100; ev(addDays(end,3),'Авансовый отчёт принят: ' + money(t.fact)); }
+    }
+    return t;
+  });
+  return {settings, employees, trips, seq:{trip:trips.length, emp:employees.length}};
+}
+
+/* ============ state ============ */
+const LS = 'travelflow-v1';
+let state;
+try { state = JSON.parse(localStorage.getItem(LS)); } catch(e) { state = null; }
+if (!state || !state.trips) state = seed();
+function save(){ try { localStorage.setItem(LS, JSON.stringify(state)); } catch(e) {} }
+const ui = {tripFilter:'all', tripSearch:'', tripSort:'date-desc', empSearch:'', empDept:'', dosTab:'overview', period:'month', form:null, menu:false, pendingTrip:null};
+
+const emp = id => state.employees.find(e => e.id === +id);
+const trip = id => state.trips.find(t => t.id === +id);
+const fio = e => e ? `${e.last} ${e.first} ${e.middle}` : '— удалён —';
+const nameShort = e => e ? `${e.first} ${e.last}` : '— удалён —';
+const initials = e => e ? (e.first[0] + e.last[0]) : '?';
+const avatar = (e, cls='av') => `<span class="${cls}" style="background:${AV_COLORS[(e?.id||0)%AV_COLORS.length]}">${h(initials(e))}</span>`;
+const tripNo = t => '№ ' + String(t.id).padStart(3,'0');
+
+function tripDays(t){ return Math.max(0, diffDays(t.start, t.end) + 1); }
+function cost(t){
+  const d = tripDays(t), n = Math.max(0, d-1);
+  const tickets = +t.tickets||0, hotel = (+t.hotelRate||0)*n, perdiem = (+t.perDiem||0)*d;
+  return {days:d, nights:n, tickets, hotel, perdiem, total: tickets+hotel+perdiem};
+}
+const spent = t => t.fact ?? cost(t).total;
+function status(t){
+  if (t.state !== 'approved') return t.state;
+  if (t.start > T) return 'planned';
+  if (t.end < T) return 'done';
+  return 'active';
+}
+const pill = t => { const s = STATUS[status(t)]; return `<span class="pill ${s.c}">${s.l}</span>`; };
+const route = t => `${h(t.from)} – ${h(t.to)}`;
+const dates = t => `${fds(t.start)}–${fds(t.end)}`;
+function age(b){ const d = pd(b); let a = TODAY.getFullYear()-d.getFullYear(); const m = TODAY.getMonth()-d.getMonth(); if (m<0 || (m===0 && TODAY.getDate()<d.getDate())) a--; return a; }
+
+function estimateTickets(to, transport){
+  if (!to) return 0;
+  const km = CITIES[to] ?? 1200;
+  const k = {'Самолёт':[6000,7.5], 'Поезд':[2000,7], 'Автобус':[0,5], 'Автомобиль':[0,12.4]}[transport] || [0,7];
+  return Math.round((k[0] + km*k[1]) / 100) * 100;
+}
+
+/* ============ toasts / modal / menu ============ */
+function toast(msg, kind=''){
+  const el = document.createElement('div'); el.className = 'toast ' + kind; el.textContent = msg;
+  $('#toasts').appendChild(el); setTimeout(() => el.remove(), 2800);
+}
+let onConfirm = null;
+function openModal(html, cls=''){
+  closeModal();
+  const o = document.createElement('div'); o.className = 'overlay'; o.id = 'overlay';
+  o.innerHTML = `<div class="modal ${cls}" role="dialog" aria-modal="true">${html}</div>`;
+  o.addEventListener('mousedown', e => { if (e.target === o) closeModal(); });
+  document.body.appendChild(o); document.body.classList.add('noscroll');
+}
+function closeModal(){ const o = $('#overlay'); if (o) o.remove(); document.body.classList.remove('noscroll'); }
+const mhead = title => `<div class="m-head"><h2>${title}</h2><button class="x" data-act="close-modal" aria-label="Закрыть">×</button></div>`;
+function confirmBox({title, text, ok='Подтвердить', danger=false, input=false, placeholder='', then}){
+  onConfirm = then;
+  openModal(`${mhead(h(title))}<p style="margin:0 0 10px">${text}</p>
+    ${input ? `<div class="field" id="cfField"><textarea class="inp" id="cfInput" placeholder="${h(placeholder)}"></textarea><div class="ferr">Заполните поле</div></div>` : ''}
+    <div class="m-actions"><button class="btn ghost" data-act="close-modal">Отмена</button><button class="btn ${danger?'danger':''}" data-act="confirm-ok">${h(ok)}</button></div>`, 'narrow');
+  if (input) setTimeout(() => $('#cfInput')?.focus(), 50);
+}
+function closeMenu(){ document.querySelectorAll('.menu').forEach(m => m.remove()); }
+function openMenu(btn, items){
+  closeMenu();
+  const m = document.createElement('div'); m.className = 'menu';
+  m.innerHTML = items.map(i => `<button class="${i.cls||''}" data-act="${i.act}" data-id="${i.id}">${i.label}</button>`).join('');
+  document.body.appendChild(m);
+  const r = btn.getBoundingClientRect();
+  const left = Math.min(window.innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth);
+  let top = r.bottom + 4; if (top + m.offsetHeight > window.innerHeight - 8) top = r.top - m.offsetHeight - 4;
+  m.style.left = Math.max(8,left) + 'px'; m.style.top = top + 'px';
+}
+
+/* ============ shared fragments ============ */
+function tripTable(list, {showPurpose=true, showEmp=true, showNo=true} = {}){
+  if (!list.length) return `<div class="empty">Командировок не найдено</div>`;
+  return `<div class="table-wrap"><table><thead><tr>
+    ${showNo?'<th>№</th>':''}${showEmp?'<th>Сотрудник</th>':''}<th>Направление</th><th>Дата</th>${showPurpose?'<th>Цель</th>':''}<th class="num">Бюджет</th><th class="c">Статус</th></tr></thead><tbody>
+    ${list.map(t => { const e = emp(t.emp); return `<tr class="click" data-act="open-trip" data-id="${t.id}">
+      ${showNo?`<td class="muted">${String(t.id).padStart(3,'0')}</td>`:''}
+      ${showEmp?`<td><div class="who">${avatar(e)}<span>${h(nameShort(e))}</span></div></td>`:''}
+      <td class="nowrap">${route(t)}</td><td class="nowrap">${dates(t)}</td>
+      ${showPurpose?`<td>${h(t.purpose)}</td>`:''}
+      <td class="num">${money(cost(t).total)}</td><td class="c">${pill(t)}</td></tr>`; }).join('')}
+    </tbody></table></div>`;
+}
+
+/* ============ views ============ */
+function viewHome(){
+  const c = s => state.trips.filter(t => status(t) === s).length;
+  const y = TODAY.getFullYear(), m = TODAY.getMonth();
+  const mS = iso(new Date(y,m,1)), mE = iso(new Date(y,m+1,0));
+  const spend = state.trips.filter(t => t.state==='approved' && t.start<=mE && t.end>=mS).reduce((a,t) => a+spent(t), 0);
+  const recent = state.trips.filter(t => t.state !== 'draft').sort((a,b) => b.created.localeCompare(a.created) || b.id-a.id).slice(0,6);
+  const pending = state.trips.filter(t => t.state === 'approval').sort((a,b) => a.start.localeCompare(b.start));
+  const upcoming = state.trips.filter(t => status(t) === 'planned').sort((a,b) => a.start.localeCompare(b.start)).slice(0,5);
+  return `
+  <div class="page-head"><div><h1>Командировки</h1><div class="sub">Обзор за ${MONTHS[m]} ${y}</div></div>
+    <button class="btn" data-act="new-trip">+ новая командировка</button></div>
+  <div class="stats">
+    <button class="stat" data-act="trip-filter" data-k="active"><div class="l">В пути</div><div class="v">${c('active')}</div></button>
+    <button class="stat" data-act="trip-filter" data-k="approval"><div class="l">На согласовании</div><div class="v">${c('approval')}</div></button>
+    <button class="stat" data-act="trip-filter" data-k="planned"><div class="l">Запланировано</div><div class="v">${c('planned')}</div></button>
+    <button class="stat primary" data-act="go" data-to="reports"><div class="l">Расходы за месяц</div><div class="v">${shortMoney(spend)}</div></button>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>Последние командировки</h2><button class="btn plain" data-act="trip-filter" data-k="all">Все командировки →</button></div>
+    ${tripTable(recent, {showPurpose:false, showNo:false})}
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-head"><h3>Ожидают согласования</h3><span class="muted small">${pending.length}</span></div>
+      <div class="mini-list">${pending.length ? pending.map(t => { const e = emp(t.emp); return `<div class="it">${avatar(e)}
+        <div class="grow"><div><button class="link" data-act="open-trip" data-id="${t.id}">${h(nameShort(e))}</button></div><div class="small muted">${route(t)} · ${dates(t)} · ${money(cost(t).total)}</div></div>
+        <button class="btn sm success" data-act="approve" data-id="${t.id}" title="Согласовать">✓</button>
+        <button class="btn sm danger" data-act="reject" data-id="${t.id}" title="Отклонить">✕</button></div>`; }).join('') : '<div class="empty">Все заявки рассмотрены</div>'}</div></div>
+    <div class="card"><div class="card-head"><h3>Ближайшие поездки</h3><span class="muted small">${upcoming.length}</span></div>
+      <div class="mini-list">${upcoming.length ? upcoming.map(t => { const e = emp(t.emp); const dd = diffDays(T,t.start); return `<div class="it">${avatar(e)}
+        <div class="grow"><div><button class="link" data-act="open-trip" data-id="${t.id}">${h(nameShort(e))}</button></div><div class="small muted">${route(t)} · ${dates(t)}</div></div>
+        <span class="small muted nowrap">через ${daysW(dd)}</span></div>`; }).join('') : '<div class="empty">Нет запланированных поездок</div>'}</div></div>
+  </div>`;
+}
+
+function filteredTrips(){
+  const q = ui.tripSearch.trim().toLowerCase();
+  let list = state.trips.filter(t => ui.tripFilter === 'all' || status(t) === ui.tripFilter);
+  if (q) list = list.filter(t => [fio(emp(t.emp)), t.from, t.to, t.purpose, emp(t.emp)?.dept].join(' ').toLowerCase().includes(q));
+  const s = ui.tripSort;
+  list.sort((a,b) => s==='date-asc' ? a.start.localeCompare(b.start) : s==='budget-desc' ? cost(b).total-cost(a).total : s==='budget-asc' ? cost(a).total-cost(b).total : b.start.localeCompare(a.start));
+  return list;
+}
+function viewTrips(){
+  const counts = {}; state.trips.forEach(t => { const s = status(t); counts[s] = (counts[s]||0)+1; });
+  const chips = [['all','Все',state.trips.length],['draft','Черновики'],['approval','На согласовании'],['planned','Запланированы'],['active','В пути'],['done','Завершены'],['rejected','Отклонены'],['cancelled','Отменены']];
+  const list = filteredTrips();
+  return `
+  <div class="page-head"><div><h1>Командировки</h1><div class="sub">Все заявки и поездки сотрудников</div></div>
+    <button class="btn" data-act="new-trip">+ новая командировка</button></div>
+  <div class="card">
+    <div class="toolbar"><div class="chips">${chips.map(([k,l,n]) => `<button class="chip ${ui.tripFilter===k?'on':''}" data-act="trip-filter" data-k="${k}">${l} <span>${n ?? counts[k] ?? 0}</span></button>`).join('')}</div></div>
+    <div class="toolbar"><div class="tools" style="flex:1">
+      <input class="inp" style="flex:1" data-search="trips" placeholder="Поиск: сотрудник, город, цель, отдел" value="${h(ui.tripSearch)}">
+      <select class="inp" data-sel="tripSort">
+        ${[['date-desc','Сначала новые'],['date-asc','Сначала старые'],['budget-desc','Бюджет: по убыванию'],['budget-asc','Бюджет: по возрастанию']].map(([v,l]) => `<option value="${v}" ${ui.tripSort===v?'selected':''}>${l}</option>`).join('')}
+      </select></div></div>
+    <div id="tripsTable">${tripTable(list)}<div class="small muted" style="margin-top:10px">Показано: ${list.length} · на сумму ${money(list.reduce((a,t)=>a+cost(t).total,0))}</div></div>
+  </div>`;
+}
+
+function tripModal(id){
+  const t = trip(id); if (!t) return;
+  const e = emp(t.emp), c = cost(t), s = status(t);
+  const btn = (act,label,cls='') => `<button class="btn ${cls}" data-act="${act}" data-id="${t.id}">${label}</button>`;
+  let actions = '';
+  if (s==='draft') actions = btn('delete-trip','Удалить','ghost') + btn('edit-trip','Редактировать','ghost') + btn('submit','Отправить на согласование');
+  else if (s==='approval') actions = btn('edit-trip','Редактировать','ghost') + btn('reject','Отклонить','danger') + btn('approve','Согласовать','success');
+  else if (s==='planned') actions = btn('cancel-trip','Отменить поездку','ghost');
+  else if (s==='active') actions = btn('finish-trip','Завершить досрочно','ghost');
+  else if (s==='rejected' || s==='cancelled') actions = btn('delete-trip','Удалить','ghost') + btn('edit-trip','Исправить и подать снова');
+  else if (s==='done') actions = btn('open-doc-trip','Авансовый отчёт','ghost');
+  let factBlock = '';
+  if (s==='done') {
+    factBlock = t.fact != null
+      ? `<div class="${t.fact<=c.total?'okbox':'warn'}" style="margin:0 0 14px">Фактические расходы: <b>${money(t.fact)}</b> — ${t.fact<=c.total ? 'экономия ' + money(c.total-t.fact) : 'перерасход ' + money(t.fact-c.total)}</div>`
+      : `<div class="field" id="factField"><label class="f">Фактические расходы по авансовому отчёту, ₽</label>
+          <div style="display:flex;gap:8px"><input class="inp" id="factInput" type="number" min="0" placeholder="${c.total}"><button class="btn" data-act="set-fact" data-id="${t.id}">Сохранить</button></div><div class="ferr">Введите сумму</div></div>`;
+  }
+  openModal(`
+    <div class="m-head"><div><h2>Командировка ${tripNo(t)}</h2><div style="margin-top:6px">${pill(t)}</div></div><button class="x" data-act="close-modal" aria-label="Закрыть">×</button></div>
+    <div class="info-grid">
+      <div><div class="lb">Сотрудник</div><div class="vl"><button class="link" data-act="open-emp" data-id="${t.emp}">${h(fio(e))}</button></div><div class="small muted">${h(e?.position||'')} · ${h(e?.dept||'')}</div></div>
+      <div><div class="lb">Направление</div><div class="vl">${route(t)}</div></div>
+      <div><div class="lb">Даты</div><div class="vl">${fd(t.start)} — ${fd(t.end)}</div><div class="small muted">${daysW(c.days)}</div></div>
+      <div><div class="lb">Транспорт</div><div class="vl">${h(t.transport)}</div></div>
+      <div style="grid-column:1/-1"><div class="lb">Цель поездки</div><div class="vl">${h(t.purpose)}</div></div>
+      ${t.comment ? `<div style="grid-column:1/-1"><div class="lb">Комментарий</div><div class="vl">${h(t.comment)}</div></div>` : ''}
+      ${t.reason ? `<div style="grid-column:1/-1"><div class="lb">Причина отклонения</div><div class="vl" style="color:var(--red)">${h(t.reason)}</div></div>` : ''}
+    </div>
+    <div class="costbox">
+      <div class="sumrow"><span>Билеты</span><span>${money(c.tickets)}</span></div>
+      <div class="sumrow"><span>Проживание (${c.nights} ноч. × ${money(t.hotelRate)})</span><span>${money(c.hotel)}</span></div>
+      <div class="sumrow"><span>Суточные (${c.days} × ${money(t.perDiem)})</span><span>${money(c.perdiem)}</span></div>
+      <div class="sumrow total" style="border-color:#9fb6d3"><span>Итого по смете</span><span>${money(c.total)}</span></div>
+    </div>
+    ${factBlock}
+    <h3 style="font-size:15px;margin:4px 0 10px">История</h3>
+    <ul class="timeline">${[...t.history].reverse().map(x => `<li><div>${h(x.t)}</div><div class="d">${fd(x.d)}</div></li>`).join('')}</ul>
+    <div class="m-actions">${actions}</div>`);
+}
+
+/* ---- trip form ---- */
+function blankForm(empId){
+  const s = state.settings, start = addDays(T,7);
+  return {id:null, emp:empId?String(empId):'', from:s.homeCity, to:'', start, end:addDays(start,4), purpose:'', transport:'Поезд', tickets:0, hotelRate:s.hotelLimit, perDiem:s.perDiem, comment:'', touched:false};
+}
+function viewForm(){
+  if (!ui.form) ui.form = blankForm();
+  const f = ui.form, edit = !!f.id;
+  const cityList = Object.keys(CITIES).sort((a,b)=>a.localeCompare(b,'ru')).map(c => `<option value="${h(c)}">`).join('');
+  return `
+  <div class="page-head"><div><h1>${edit ? 'Редактирование заявки' : 'Новая командировка'}</h1><div class="sub">${edit ? 'Командировка ' + tripNo(trip(f.id)) : 'Заполните данные'}</div></div>
+    <button class="btn ghost" data-act="form-cancel">← Назад</button></div>
+  <div class="form-layout">
+    <div class="card" style="margin:0">
+      <div class="field" data-req="emp"><label class="f">ФИО сотрудника</label>
+        <select class="inp" data-field="emp"><option value="">— выберите сотрудника —</option>
+        ${[...state.employees].sort((a,b)=>a.last.localeCompare(b.last,'ru')).map(e => `<option value="${e.id}" ${String(e.id)===String(f.emp)?'selected':''}>${h(fio(e))} — ${h(e.position)}</option>`).join('')}</select>
+        <div class="ferr">Выберите сотрудника</div></div>
+      <div class="field" data-req="route"><label class="f">Направление</label>
+        <div class="arrow-row"><input class="inp" data-field="from" list="cities" value="${h(f.from)}" placeholder="Откуда"><span class="ar">⟶</span><input class="inp" data-field="to" list="cities" value="${h(f.to)}" placeholder="Куда"></div>
+        <datalist id="cities">${cityList}</datalist><div class="ferr">Укажите разные города отправления и назначения</div></div>
+      <div class="field" data-req="dates"><label class="f">Дата</label>
+        <div class="arrow-row"><input class="inp" type="date" data-field="start" value="${f.start}"><span class="ar">⟶</span><input class="inp" type="date" data-field="end" value="${f.end}"></div>
+        <div class="ferr">Дата окончания не может быть раньше даты начала</div></div>
+      <div class="field" data-req="purpose"><label class="f">Цель поездки</label>
+        <input class="inp" data-field="purpose" value="${h(f.purpose)}" placeholder="Например: переговоры с партнёрами"><div class="ferr">Укажите цель поездки</div></div>
+      <div class="row2">
+        <div class="field"><label class="f">Транспорт</label>
+          <select class="inp" data-field="transport">${TRANSPORT.map(x => `<option ${x===f.transport?'selected':''}>${x}</option>`).join('')}</select></div>
+        <div class="field"><label class="f">Билеты туда-обратно, ₽</label>
+          <input class="inp" type="number" min="0" step="100" data-field="tickets" value="${f.tickets||''}" placeholder="0">
+          <div class="hint">${f.touched ? 'Введено вручную' : 'Оценка по направлению — можно изменить'}</div></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label class="f">Проживание за ночь, ₽</label>
+          <input class="inp" type="number" min="0" step="100" data-field="hotelRate" value="${f.hotelRate}"><div class="hint">Лимит: ${money(state.settings.hotelLimit)}</div></div>
+        <div class="field"><label class="f">Бюджет</label><input class="inp" id="budgetField" readonly style="background:#F5F8FB"><div class="hint">Рассчитывается автоматически</div></div>
+      </div>
+      <div class="field" style="margin-bottom:0"><label class="f">Комментарий (необязательно)</label>
+        <textarea class="inp" data-field="comment" placeholder="Пожелания по гостинице, билетам и т. п.">${h(f.comment)}</textarea></div>
+    </div>
+    <div class="card summary" style="margin:0"><div id="summary"></div>
+      <button class="btn block" data-act="form-submit">Отправить заявку</button>
+      <button class="btn ghost block" data-act="form-draft">Сохранить черновик</button></div>
+  </div>`;
+}
+function renderSummary(){
+  const f = ui.form, box = $('#summary'); if (!f || !box) return;
+  const valid = f.start && f.end && f.end >= f.start;
+  const c = valid ? cost(f) : {days:0,nights:0,tickets:+f.tickets||0,hotel:0,perdiem:0,total:+f.tickets||0};
+  const e = emp(f.emp);
+  let note = '';
+  if (e) {
+    const used = state.trips.filter(t => t.emp===e.id && t.state==='approved' && t.id!==f.id && pd(t.start).getFullYear()===TODAY.getFullYear()).reduce((a,t)=>a+spent(t),0);
+    const rest = e.limit - used;
+    note = c.total > rest ? `<div class="warn">Превышение годового лимита сотрудника на ${money(c.total-rest)} (остаток ${money(Math.max(0,rest))})</div>` : `<div class="okbox">В пределах лимита. Остаток после поездки: ${money(rest-c.total)}</div>`;
+  }
+  if (+f.hotelRate > state.settings.hotelLimit) note += `<div class="warn">Стоимость проживания выше лимита ${money(state.settings.hotelLimit)} за ночь</div>`;
+  const auto = state.settings.autoApprove && c.total <= state.settings.autoLimit;
+  box.innerHTML = `<h3>ИТОГ</h3>
+    <div class="sumrow"><span>Длительность</span><span>${daysW(c.days)}</span></div>
+    <div class="sumrow"><span>Билеты</span><span>${money(c.tickets)}</span></div>
+    <div class="sumrow"><span>Проживание</span><span>${money(c.hotel)}</span></div>
+    <div class="sumrow"><span>Суточные</span><span>${money(c.perdiem)}</span></div>
+    <div class="sumrow total"><span>Итого</span><span>${money(c.total)}</span></div>
+    ${note}
+    ${auto ? '<div class="hint" style="margin-top:8px">Сумма в пределах автосогласования — заявка будет согласована сразу</div>' : ''}`;
+  const b = $('#budgetField'); if (b) b.value = money(c.total);
+}
+function formInput(el){
+  const f = ui.form, k = el.dataset.field; if (!f) return;
+  f[k] = el.value;
+  if (k === 'tickets') { f.touched = true; const hint = el.parentElement.querySelector('.hint'); if (hint) hint.textContent = 'Введено вручную'; }
+  if ((k === 'to' || k === 'transport') && !f.touched) {
+    f.tickets = estimateTickets(f.to, f.transport);
+    const ti = document.querySelector('[data-field="tickets"]'); if (ti) ti.value = f.tickets || '';
+  }
+  if (k === 'start' && f.end && f.end < f.start) { f.end = f.start; document.querySelector('[data-field="end"]').value = f.end; }
+  el.closest('.field')?.classList.remove('bad');
+  renderSummary();
+}
+function validateForm(){
+  const f = ui.form; let ok = true;
+  const mark = (k, bad) => { const el = document.querySelector(`[data-req="${k}"]`); el?.classList.toggle('bad', bad); if (bad) ok = false; };
+  mark('emp', !f.emp);
+  mark('route', !f.from.trim() || !f.to.trim() || f.from.trim().toLowerCase() === f.to.trim().toLowerCase());
+  mark('dates', !f.start || !f.end || f.end < f.start);
+  mark('purpose', !f.purpose.trim());
+  if (!ok) { toast('Проверьте обязательные поля', 'bad'); document.querySelector('.field.bad')?.scrollIntoView({behavior:'smooth', block:'center'}); }
+  return ok;
+}
+function saveForm(asDraft){
+  if (!asDraft && !validateForm()) return;
+  const f = ui.form;
+  if (asDraft && !f.emp) { document.querySelector('[data-req="emp"]').classList.add('bad'); toast('Для черновика выберите сотрудника','bad'); return; }
+  if (asDraft && (!f.end || f.end < f.start)) { validateForm(); return; }
+  const data = {emp:+f.emp, from:f.from.trim(), to:f.to.trim() || '—', start:f.start, end:f.end, purpose:f.purpose.trim() || 'Не указана', transport:f.transport,
+    tickets:+f.tickets||0, hotelRate:+f.hotelRate||0, perDiem:+f.perDiem||state.settings.perDiem, comment:f.comment.trim()};
+  let t;
+  if (f.id) { t = trip(f.id); Object.assign(t, data); t.reason = ''; t.history.push({d:T, t:'Заявка изменена'}); }
+  else { t = {id: ++state.seq.trip, ...data, state:'draft', fact:null, reason:'', created:T, history:[{d:T, t:'Заявка создана'}]}; state.trips.push(t); }
+  if (asDraft) { t.state = 'draft'; toast('Черновик сохранён'); }
+  else submitTrip(t, true);
+  ui.form = null; save();
+  ui.tripFilter = 'all'; ui.pendingTrip = t.id; go('trips');
+}
+function submitTrip(t, quiet){
+  t.history.push({d:T, t:'Отправлена на согласование'});
+  if (state.settings.autoApprove && cost(t).total <= state.settings.autoLimit) {
+    t.state = 'approved'; t.history.push({d:T, t:'Согласовано автоматически (сумма до ' + money(state.settings.autoLimit) + ')'});
+    toast('Заявка согласована автоматически', 'ok');
+  } else { t.state = 'approval'; toast(quiet ? 'Заявка отправлена на согласование' : 'Отправлено на согласование', 'ok'); }
+}
+
+/* ---- employees ---- */
+function viewEmployees(){
+  return `
+  <div class="page-head"><div><h1>Сотрудники</h1><div class="sub">${state.employees.length} ${plural(state.employees.length,['сотрудник','сотрудника','сотрудников'])} в компании</div></div>
+    <button class="btn" data-act="new-emp">+ новый сотрудник</button></div>
+  <div class="card">
+    <div class="card-head"><h2>Общий список</h2>
+      <div class="tools"><input class="inp" data-search="emps" placeholder="Поиск по имени, email, должности" value="${h(ui.empSearch)}">
+      <select class="inp" data-sel="empDept"><option value="">Все отделы</option>${DEPTS.map(d => `<option ${ui.empDept===d?'selected':''}>${d}</option>`).join('')}</select></div></div>
+    <div id="empTable">${empTableHtml()}</div>
+  </div>`;
+}
+function empTableHtml(){
+  const q = ui.empSearch.trim().toLowerCase();
+  const list = state.employees.filter(e => (!ui.empDept || e.dept === ui.empDept) && (!q || [fio(e), e.email, e.position, e.dept].join(' ').toLowerCase().includes(q)))
+    .sort((a,b) => a.last.localeCompare(b.last,'ru'));
+  if (!list.length) return '<div class="empty">Сотрудники не найдены</div>';
+  return `<div class="table-wrap"><table><thead><tr><th>Сотрудник</th><th>Отдел</th><th>Email</th><th>Должность</th><th>Дата приёма</th><th class="c">Статус</th><th></th></tr></thead><tbody>
+  ${list.map(e => { const act = state.trips.find(t => t.emp===e.id && status(t)==='active');
+    return `<tr class="click" data-act="open-emp" data-id="${e.id}">
+    <td><div class="who">${avatar(e)}<span>${h(e.first)} ${h(e.last)}</span></div></td><td>${h(e.dept)}</td>
+    <td><a href="mailto:${h(e.email)}" data-act="noop">${h(e.email)}</a></td><td>${h(e.position)}</td><td>${fd(e.hired)}</td>
+    <td class="c">${act ? `<span class="pill s-active" title="${h(act.to)}">В пути</span>` : '<span class="small muted">В офисе</span>'}</td>
+    <td class="c"><button class="dots" data-act="emp-menu" data-id="${e.id}" aria-label="Действия">···</button></td></tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+
+function empStats(e){
+  const y = TODAY.getFullYear();
+  const all = state.trips.filter(t => t.emp === e.id);
+  const real = all.filter(t => t.state === 'approved');
+  const year = real.filter(t => pd(t.start).getFullYear() === y);
+  const daysYear = year.filter(t => t.start <= T).reduce((a,t) => a + diffDays(t.start, t.end < T ? t.end : T) + 1, 0);
+  const spentYear = year.reduce((a,t) => a + spent(t), 0);
+  const avg = real.length ? real.reduce((a,t) => a + spent(t), 0) / real.length : 0;
+  const active = real.find(t => status(t) === 'active');
+  const dest = {}; real.forEach(t => dest[t.to] = (dest[t.to]||0) + 1);
+  const recent = [...real].sort((a,b) => b.start.localeCompare(a.start)).map(t => t.to).filter((v,i,a) => a.indexOf(v)===i).slice(0,3);
+  return {all, real, daysYear, spentYear, rest: e.limit - spentYear, avg, active, dest, recent};
+}
+function viewDossier(id){
+  const e = emp(id);
+  if (!e) return `<div class="page-head"><h1>Сотрудник не найден</h1></div><button class="btn" data-act="go" data-to="employees">К списку сотрудников</button>`;
+  const st = empStats(e), tab = ui.dosTab;
+  const tabs = [['overview','Обзор'],['trips','Командировки'],['docs','Документы'],['access','Доступ'],['history','История']];
+  let body = '';
+  if (tab === 'overview') body = `
+    <div class="sec-t">Личные данные</div>
+    <div class="kv"><span>ФИО</span><span>${h(fio(e))}</span></div>
+    <div class="kv"><span>Дата рождения</span><span>${fd(e.birth)} (${age(e.birth)} ${plural(age(e.birth),['год','года','лет'])})</span></div>
+    <div class="kv"><span>Пол</span><span>${e.gender==='Ж'?'Женский':'Мужской'}</span></div>
+    <div class="kv"><span>Город</span><span>${h(e.city)}</span></div>
+    <div class="sec-t">Должность</div>
+    <div class="kv"><span>Номер</span><span>${pad(e.id)}</span></div>
+    <div class="kv"><span>Подразделение</span><span>${h(e.dept)}</span></div>
+    <div class="kv"><span>Должность</span><span>${h(e.position)}</span></div>
+    <div class="kv"><span>Дата приёма</span><span>${fd(e.hired)}</span></div>
+    <div class="sec-t">Реквизиты</div>
+    <div class="kv"><span>Карта для аванса</span><span>•••• •••• •••• ${h(e.card4)}</span></div>
+    <div class="kv"><span>Паспорт</span><span class="muted">данные скрыты</span></div>
+    <div class="kv"><span>Гражданство</span><span>${h(e.citizenship)}</span></div>`;
+  else if (tab === 'trips') body = `<div class="card-head"><h3 style="margin:0">Командировки сотрудника</h3><button class="btn sm" data-act="new-trip" data-emp="${e.id}">+ новая командировка</button></div>
+    ${tripTable([...st.all].sort((a,b)=>b.start.localeCompare(a.start)), {showEmp:false})}`;
+  else if (tab === 'docs') {
+    const docs = [];
+    [...st.real].sort((a,b)=>b.start.localeCompare(a.start)).forEach(t => {
+      docs.push({t, kind:'order', title:`Приказ о направлении в командировку № ${t.id}-К`, sub:`${route(t)} · ${dates(t)}`});
+      docs.push({t, kind:'task', title:`Служебное задание № ${t.id}-СЗ`, sub:h(t.purpose)});
+      if (status(t)==='done') docs.push({t, kind:'report', title:`Авансовый отчёт № ${t.id}-АО`, sub: t.fact!=null ? 'Принят: ' + money(t.fact) : 'Ожидает заполнения'});
+    });
+    body = docs.length ? docs.map(d => `<div class="doc-item"><div class="doc-ic">${d.kind==='report'?'XLS':'DOC'}</div><div class="t"><div>${d.title}</div><div class="small muted">${d.sub}</div></div>
+      <button class="btn sm ghost" data-act="open-doc" data-id="${d.t.id}" data-kind="${d.kind}">Открыть</button></div>`).join('') : '<div class="empty">Документов пока нет — они появятся после согласования командировок</div>';
+  }
+  else if (tab === 'access') body = `
+    <div class="field" style="max-width:320px"><label class="f">Роль в системе</label>
+      <select class="inp" id="accRole">${Object.entries(ROLES).map(([k,v]) => `<option value="${k}" ${e.role===k?'selected':''}>${v}</option>`).join('')}</select>
+      <div class="hint">При смене роли права заполняются по умолчанию — их можно изменить вручную</div></div>
+    <div class="sec-t">Права доступа</div>
+    ${Object.entries(PERMS).map(([k,v]) => `<label class="perm"><input type="checkbox" data-perm="${k}" ${e.perms.includes(k)?'checked':''}> ${v}</label>`).join('')}
+    <div class="field" style="margin-top:14px;max-width:320px"><label class="f">Годовой лимит на командировки, ₽</label><input class="inp" type="number" id="accLimit" value="${e.limit}" min="0" step="10000"></div>
+    <button class="btn" data-act="save-access" data-id="${e.id}">Сохранить изменения</button>`;
+  else if (tab === 'history') {
+    const ev = [{d:e.hired, t:`Принят${e.gender==='Ж'?'а':''} на работу: ${e.position}`}];
+    e.log.forEach(x => ev.push(x));
+    st.all.forEach(t => t.history.forEach(x => ev.push({d:x.d, t:`${x.t} — командировка ${tripNo(t)} (${t.to})`, id:t.id})));
+    ev.sort((a,b) => b.d.localeCompare(a.d));
+    body = `<ul class="timeline">${ev.map(x => `<li><div>${x.id ? `<button class="link" style="font-weight:400;text-align:left" data-act="open-trip" data-id="${x.id}">${h(x.t)}</button>` : h(x.t)}</div><div class="d">${fd(x.d)}</div></li>`).join('')}</ul>`;
+  }
+  const destList = Object.entries(st.dest).sort((a,b)=>b[1]-a[1]);
+  return `
+  <div class="page-head"><h1><a href="#employees">Сотрудники</a> &gt; Досье</h1>
+    <button class="btn" data-act="edit-emp" data-id="${e.id}">Изменить</button></div>
+  <div class="card">
+    <h2 style="margin-bottom:4px">Сотрудник № ${pad(e.id)}</h2>
+    <div class="dos-head">${avatar(e,'av dos-av')}
+      <div><div class="nm">${h(fio(e))}</div><div>${h(e.position)} — ${h(e.dept)}</div>
+      <div><a href="mailto:${h(e.email)}">${h(e.email)}</a> · ${h(e.phone)} · ${h(e.city)}</div></div></div>
+    <div class="tabs">${tabs.map(([k,l]) => `<button class="tab ${tab===k?'on':''}" data-act="dos-tab" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="dos-grid">
+      <div class="dos-main">${body}</div>
+      <div class="dos-side"><h4>Статистика</h4>
+        <div class="st-line"><span>Поездок всего</span><b>${st.real.length}</b></div>
+        <div class="st-line"><span>Местонахождение</span><b>${st.active ? 'В командировке: ' + h(st.active.to) : 'В офисе'}</b></div>
+        <div class="st-line"><span>Дней в поездках за год</span><b>${st.daysYear}</b></div>
+        <div class="gap"></div>
+        <div class="st-line"><span>Расходы за год</span><b>${money(st.spentYear)}</b></div>
+        <div class="st-line"><span>Годовой лимит</span><b>${money(e.limit)}</b></div>
+        <div class="st-line"><span>Остаток бюджета</span><b style="color:${st.rest<0?'var(--red)':'inherit'}">${money(st.rest)}</b></div>
+        <div class="st-line"><span>Ср. стоимость поездки</span><b>${money(st.avg)}</b></div>
+        <div class="gap"></div>
+        <div style="margin-bottom:4px">Последние направления</div>
+        ${st.recent.length ? st.recent.map(c => `<div><b>${h(c)}</b>${st.dest[c]>1?` (${st.dest[c]})`:''}</div>`).join('') : '<div class="muted">—</div>'}
+        <div class="gap"></div>
+        <div>Ограничения: <b>${h(e.restrictions||'Отсутствуют')}</b></div>
+      </div>
+    </div>
+  </div>`;
+}
+function empForm(id){
+  const e = id ? emp(id) : {last:'',first:'',middle:'',gender:'Ж',birth:'1995-01-01',dept:DEPTS[0],position:'',email:'',phone:'',city:state.settings.homeCity,hired:T,card4:'',citizenship:'РФ',limit:state.settings.annualLimit,restrictions:'Отсутствуют'};
+  const inp = (k,l,type='text',extra='') => `<div class="field" data-req="${k}"><label class="f">${l}</label><input class="inp" id="ef_${k}" type="${type}" value="${h(e[k])}" ${extra}><div class="ferr">Заполните поле</div></div>`;
+  openModal(`${mhead(id ? 'Редактирование сотрудника' : 'Новый сотрудник')}
+    <div class="row2">${inp('last','Фамилия')}${inp('first','Имя')}</div>
+    <div class="row2">${inp('middle','Отчество')}
+      <div class="field"><label class="f">Пол</label><select class="inp" id="ef_gender"><option value="Ж" ${e.gender==='Ж'?'selected':''}>Женский</option><option value="М" ${e.gender==='М'?'selected':''}>Мужской</option></select></div></div>
+    <div class="row2">${inp('birth','Дата рождения','date')}${inp('hired','Дата приёма','date')}</div>
+    <div class="row2"><div class="field"><label class="f">Отдел</label><select class="inp" id="ef_dept">${DEPTS.map(d => `<option ${d===e.dept?'selected':''}>${d}</option>`).join('')}</select></div>${inp('position','Должность')}</div>
+    <div class="row2">${inp('email','Email','email')}${inp('phone','Телефон','tel','placeholder="+7 (900) 000-00-00"')}</div>
+    <div class="row2">${inp('city','Город')}${inp('card4','Последние 4 цифры карты','text','maxlength="4" inputmode="numeric"')}</div>
+    <div class="row2">${inp('limit','Годовой лимит, ₽','number','min="0" step="10000"')}${inp('restrictions','Ограничения')}</div>
+    <div class="m-actions"><button class="btn ghost" data-act="close-modal">Отмена</button><button class="btn" data-act="save-emp" data-id="${id||''}">${id ? 'Сохранить' : 'Добавить сотрудника'}</button></div>`, 'wide');
+}
+function saveEmp(id){
+  const g = k => ($('#ef_'+k)?.value || '').trim();
+  let ok = true;
+  ['last','first','position','email'].forEach(k => { const bad = !g(k); document.querySelector(`[data-req="${k}"]`).classList.toggle('bad', bad); if (bad) ok = false; });
+  const emailF = document.querySelector('[data-req="email"]');
+  if (g('email') && !/^\S+@\S+\.\S+$/.test(g('email'))) { emailF.classList.add('bad'); emailF.querySelector('.ferr').textContent = 'Некорректный email'; ok = false; }
+  if (!ok) return;
+  const data = {last:g('last'), first:g('first'), middle:g('middle'), gender:g('gender'), birth:g('birth')||'1990-01-01', hired:g('hired')||T, dept:g('dept'), position:g('position'),
+    email:g('email'), phone:g('phone'), city:g('city')||state.settings.homeCity, card4:g('card4').replace(/\D/g,'').slice(0,4)||'0000', limit:+g('limit')||0, restrictions:g('restrictions')||'Отсутствуют'};
+  let e;
+  if (id) { e = emp(id); Object.assign(e, data); e.log.push({d:T, t:'Данные сотрудника изменены'}); toast('Данные сохранены','ok'); }
+  else { e = {id: ++state.seq.emp, ...data, citizenship:'РФ', role:'employee', perms:[...ROLE_PERMS.employee], log:[]}; state.employees.push(e); toast('Сотрудник добавлен','ok'); }
+  save(); closeModal();
+  if (!id) { ui.dosTab = 'overview'; location.hash = '#employee-' + e.id; } else render();
+}
+
+/* ---- documents ---- */
+function docModal(id, kind){
+  const t = trip(id), e = emp(t.emp), c = cost(t), s = state.settings;
+  const dir = state.employees.find(x => x.position === 'Генеральный директор');
+  const dirName = dir ? `${dir.first[0]}. ${dir.middle[0]}. ${dir.last}` : '________';
+  const ini = e ? `${e.first[0]}. ${e.middle ? e.middle[0]+'. ' : ''}${e.last}` : '';
+  const approvedOn = (t.history.find(x => x.t.startsWith('Согласовано')) || {d:t.created}).d;
+  let html = '';
+  if (kind === 'order') html = `<div class="ctr"><b>${h(s.company)}</b></div><h4>ПРИКАЗ № ${t.id}-К</h4><div class="ctr">о направлении работника в командировку</div>
+    <div style="display:flex;justify-content:space-between;margin:14px 0"><span>г. ${h(s.homeCity)}</span><span>${fdLong(approvedOn)}</span></div>
+    <p>Направить в командировку:</p>
+    <p><b>${h(fio(e))}</b>, ${h(e?.position||'').toLowerCase()}, ${h(e?.dept||'')}, табельный № ${pad(t.emp)}.</p>
+    <p>Место назначения: г. ${h(t.to)}.<br>Срок командировки: ${c.days} календарных ${plural(c.days,['день','дня','дней'])}, с ${fd(t.start)} по ${fd(t.end)}.<br>Цель: ${h(t.purpose)}.<br>Вид транспорта: ${h(t.transport.toLowerCase())}.</p>
+    <p>Расходы произвести за счёт средств организации в пределах сметы: <b>${money(c.total)}</b> (билеты — ${money(c.tickets)}, проживание — ${money(c.hotel)}, суточные — ${money(c.perdiem)}).</p>
+    <p>Основание: служебное задание № ${t.id}-СЗ.</p>
+    <div class="sign"><span>Генеральный директор</span><span>_________ ${h(dirName)}</span></div>
+    <div class="sign"><span>С приказом ознакомлен(а)</span><span>_________ ${h(ini)}</span></div>`;
+  else if (kind === 'task') html = `<div class="ctr"><b>${h(s.company)}</b></div><h4>СЛУЖЕБНОЕ ЗАДАНИЕ № ${t.id}-СЗ</h4><div class="ctr">для направления в командировку</div>
+    <table style="width:100%;margin-top:16px"><tbody>
+      <tr><td>Работник</td><td>${h(fio(e))}</td></tr><tr><td>Подразделение</td><td>${h(e?.dept||'')}</td></tr>
+      <tr><td>Должность</td><td>${h(e?.position||'')}</td></tr><tr><td>Маршрут</td><td>${h(t.from)} — ${h(t.to)} — ${h(t.from)}</td></tr>
+      <tr><td>Срок</td><td>${fd(t.start)} — ${fd(t.end)} (${daysW(c.days)})</td></tr><tr><td>Содержание задания</td><td>${h(t.purpose)}</td></tr>
+    </tbody></table>
+    <div class="sign"><span>Руководитель</span><span>_________ ${h(dirName)}</span></div>`;
+  else html = `<div class="ctr"><b>${h(s.company)}</b></div><h4>АВАНСОВЫЙ ОТЧЁТ № ${t.id}-АО</h4><div class="ctr">по командировке в г. ${h(t.to)}, ${fd(t.start)} — ${fd(t.end)}</div>
+    <p style="margin-top:14px">Подотчётное лицо: <b>${h(fio(e))}</b>, ${h(e?.position||'').toLowerCase()}</p>
+    <table style="width:100%"><thead><tr><th style="text-align:left">Статья</th><th>По смете</th></tr></thead><tbody>
+      <tr><td>Проезд (${h(t.transport.toLowerCase())})</td><td style="text-align:right">${money(c.tickets)}</td></tr>
+      <tr><td>Проживание, ${c.nights} ноч.</td><td style="text-align:right">${money(c.hotel)}</td></tr>
+      <tr><td>Суточные, ${c.days} дн.</td><td style="text-align:right">${money(c.perdiem)}</td></tr>
+      <tr><td><b>Итого по смете</b></td><td style="text-align:right"><b>${money(c.total)}</b></td></tr>
+      <tr><td><b>Израсходовано фактически</b></td><td style="text-align:right"><b>${t.fact!=null ? money(t.fact) : '—'}</b></td></tr>
+      ${t.fact!=null ? `<tr><td>${t.fact<=c.total?'Остаток к возврату':'Перерасход к выдаче'}</td><td style="text-align:right">${money(Math.abs(c.total-t.fact))}</td></tr>` : ''}
+    </tbody></table>
+    ${t.fact==null ? '<p class="ctr" style="color:#b25">Фактические расходы ещё не внесены — откройте командировку, чтобы заполнить.</p>' : ''}
+    <div class="sign"><span>Главный бухгалтер</span><span>_________</span></div>
+    <div class="sign"><span>Подотчётное лицо</span><span>_________ ${h(ini)}</span></div>`;
+  openModal(`${mhead('Документ')}<div class="doc-paper" id="docPaper">${html}</div>
+    <div class="m-actions"><button class="btn ghost" data-act="open-trip" data-id="${t.id}">Открыть командировку</button><button class="btn" data-act="copy-doc">Скопировать текст</button></div>`, 'wide');
+}
+
+/* ---- reports ---- */
+function periodRange(p){
+  const y = TODAY.getFullYear(), m = TODAY.getMonth(), q = Math.floor(m/3);
+  if (p === 'month') return [iso(new Date(y,m,1)), iso(new Date(y,m+1,0)), `${cap(MONTHS[m])} ${y}`];
+  if (p === 'quarter') return [iso(new Date(y,q*3,1)), iso(new Date(y,q*3+3,0)), `${['I','II','III','IV'][q]} квартал ${y}`];
+  if (p === 'year') return [`${y}-01-01`, `${y}-12-31`, `${y} год`];
+  return ['0000-01-01','9999-12-31','За всё время'];
+}
+function reportData(){
+  const [a,b,label] = periodRange(ui.period);
+  const list = state.trips.filter(t => t.state === 'approved' && t.start >= a && t.start <= b);
+  return {list, label};
+}
+function viewReports(){
+  const {list, label} = reportData();
+  const total = list.reduce((s,t) => s+spent(t), 0), days = list.reduce((s,t) => s+tripDays(t), 0);
+  const pend = state.trips.filter(t => t.state === 'approval');
+  const y = TODAY.getFullYear();
+  const months = MONTHS_SH.map((n,i) => state.trips.filter(t => t.state==='approved' && pd(t.start).getFullYear()===y && pd(t.start).getMonth()===i).reduce((s,t)=>s+spent(t),0));
+  const mMax = Math.max(1, ...months);
+  const group = fn => { const g = {}; list.forEach(t => { const k = fn(t); g[k] = (g[k]||0) + spent(t); }); return Object.entries(g).sort((x,z)=>z[1]-x[1]); };
+  const byDept = group(t => emp(t.emp)?.dept || '—');
+  const dest = {}; list.forEach(t => { dest[t.to] = dest[t.to] || {n:0,s:0}; dest[t.to].n++; dest[t.to].s += spent(t); });
+  const byDest = Object.entries(dest).sort((x,z) => z[1].n-x[1].n || z[1].s-x[1].s).slice(0,6);
+  const str = list.reduce((s,t) => { const c = cost(t); s[0]+=c.tickets; s[1]+=c.hotel; s[2]+=c.perdiem; return s; }, [0,0,0]);
+  const strT = Math.max(1, str[0]+str[1]+str[2]);
+  const sCol = ['#1E6FD9','#6E7ED6','#9CC3EE'];
+  const byEmp = {}; list.forEach(t => { const r = byEmp[t.emp] = byEmp[t.emp] || {n:0,d:0,s:0}; r.n++; r.d += tripDays(t); r.s += spent(t); });
+  const empRows = Object.entries(byEmp).sort((x,z) => z[1].s-x[1].s);
+  const withFact = list.filter(t => t.fact != null), plan = withFact.reduce((s,t)=>s+cost(t).total,0), fact = withFact.reduce((s,t)=>s+t.fact,0);
+  const hb = (rows, max, fmt) => rows.length ? rows.map(([k,v]) => `<div class="hbar"><div class="top"><span>${h(k)}</span><b>${fmt(v)}</b></div><div class="trk"><div class="fill" style="width:${Math.max(2, (typeof v==='object'?v.s:v)/max*100)}%"></div></div></div>`).join('') : '<div class="empty">Нет данных за период</div>';
+  return `
+  <div class="page-head"><div><h1>Отчёты</h1><div class="sub">Аналитика по согласованным командировкам · ${label}</div></div>
+    <div class="tools"><select class="inp" data-sel="period">${[['month','Текущий месяц'],['quarter','Текущий квартал'],['year','Текущий год'],['all','За всё время']].map(([v,l]) => `<option value="${v}" ${ui.period===v?'selected':''}>${l}</option>`).join('')}</select>
+    <button class="btn" data-act="export-csv">Экспорт CSV</button></div></div>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Командировок</div><div class="v">${list.length}</div><div class="d">${days} ${plural(days,['день','дня','дней'])} в поездках</div></div>
+    <div class="kpi"><div class="l">Общие расходы</div><div class="v">${shortMoney(total)}</div><div class="d">${money(total)}</div></div>
+    <div class="kpi"><div class="l">Средняя стоимость</div><div class="v">${shortMoney(list.length ? total/list.length : 0)}</div><div class="d">на одну поездку</div></div>
+    <div class="kpi" style="cursor:pointer" data-act="trip-filter" data-k="approval"><div class="l">Ожидают согласования</div><div class="v">${pend.length}</div><div class="d">на сумму ${money(pend.reduce((s,t)=>s+cost(t).total,0))}</div></div>
+  </div>
+  <div class="card"><div class="card-head"><h3>Расходы по месяцам, ${y}</h3><span class="small muted">по дате начала поездки</span></div>
+    <div class="months">${months.map((v,i) => `<div class="mcol" title="${cap(MONTHS[i])}: ${money(v)}"><div class="mval">${v ? Math.round(v/1000)+'к' : ''}</div><div class="mbar ${i===TODAY.getMonth()?'cur':''}" style="height:${v/mMax*140}px"></div><div class="mlab">${MONTHS_SH[i]}</div></div>`).join('')}</div></div>
+  <div class="grid2" style="margin-bottom:18px">
+    <div class="card"><h3>Расходы по отделам</h3>${hb(byDept, byDept[0]?.[1]||1, money)}</div>
+    <div class="card"><h3>Популярные направления</h3>${hb(byDest, Math.max(1,...byDest.map(x=>x[1].s)), v => `${v.n} ${plural(v.n,['поездка','поездки','поездок'])} · ${shortMoney(v.s)}`)}</div>
+  </div>
+  <div class="grid2" style="margin-bottom:18px">
+    <div class="card"><h3>Структура расходов (по смете)</h3>
+      ${list.length ? `<div class="stack">${str.map((v,i) => `<div style="width:${v/strT*100}%;background:${sCol[i]}"></div>`).join('')}</div>
+      <div class="legend">${['Билеты','Проживание','Суточные'].map((l,i) => `<div><i style="background:${sCol[i]}"></i>${l} · ${Math.round(str[i]/strT*100)}%<b>${money(str[i])}</b></div>`).join('')}</div>` : '<div class="empty">Нет данных за период</div>'}</div>
+    <div class="card"><h3>План и факт</h3>
+      ${withFact.length ? `<div class="sumrow"><span>Отчитались по поездкам</span><span>${withFact.length}</span></div>
+        <div class="sumrow"><span>Сумма по сметам</span><span>${money(plan)}</span></div><div class="sumrow"><span>Фактически потрачено</span><span>${money(fact)}</span></div>
+        <div class="sumrow total"><span>${fact<=plan?'Экономия':'Перерасход'}</span><span style="color:${fact<=plan?'var(--green)':'var(--red)'}">${money(Math.abs(plan-fact))}</span></div>`
+        : '<div class="empty">За период ещё нет авансовых отчётов</div>'}</div>
+  </div>
+  <div class="card"><h3>Сводка по сотрудникам</h3>
+    ${empRows.length ? `<div class="table-wrap"><table><thead><tr><th>Сотрудник</th><th>Отдел</th><th class="num">Поездок</th><th class="num">Дней</th><th class="num">Расходы</th></tr></thead><tbody>
+    ${empRows.map(([id,r]) => { const e = emp(id); return `<tr class="click" data-act="open-emp" data-id="${id}"><td><div class="who">${avatar(e)}${h(nameShort(e))}</div></td><td>${h(e?.dept||'')}</td><td class="num">${r.n}</td><td class="num">${r.d}</td><td class="num">${money(r.s)}</td></tr>`; }).join('')}
+    </tbody></table></div>` : '<div class="empty">Нет данных за период</div>'}</div>`;
+}
+function exportCsv(){
+  const {list, label} = reportData();
+  const rows = [['№','Сотрудник','Отдел','Откуда','Куда','Начало','Окончание','Дней','Цель','Транспорт','Билеты','Проживание','Суточные','Итого','Факт','Статус']];
+  list.forEach(t => { const e = emp(t.emp), c = cost(t); rows.push([t.id, fio(e), e?.dept||'', t.from, t.to, fd(t.start), fd(t.end), c.days, t.purpose, t.transport, c.tickets, c.hotel, c.perdiem, c.total, t.fact ?? '', STATUS[status(t)].l]); });
+  const csv = rows.map(r => r.map(v => /[;"\n]/.test(String(v)) ? `"${String(v).replace(/"/g,'""')}"` : v).join(';')).join('\n');
+  openModal(`${mhead('Экспорт CSV · ' + h(label))}<p class="small muted" style="margin-top:0">${list.length} ${plural(list.length,['строка','строки','строк'])}. Скопируйте текст и вставьте в Excel или сохраните как файл .csv (разделитель — точка с запятой).</p>
+    <textarea class="inp" id="csvText" style="height:260px;font-family:ui-monospace,monospace;font-size:12px" readonly>${h(csv)}</textarea>
+    <div class="m-actions"><button class="btn ghost" data-act="close-modal">Закрыть</button><button class="btn" data-act="copy-csv">Скопировать</button></div>`, 'wide');
+}
+
+/* ---- settings ---- */
+function viewConfig(){
+  const s = state.settings;
+  const num = (k,l,hint='') => `<div class="field"><label class="f">${l}</label><input class="inp" type="number" min="0" step="100" data-set="${k}" value="${s[k]}">${hint?`<div class="hint">${hint}</div>`:''}</div>`;
+  const sw = (k,l) => `<label class="switch"><span>${l}</span><input type="checkbox" data-set="${k}" ${s[k]?'checked':''}></label>`;
+  return `
+  <div class="page-head"><div><h1>Настройки</h1><div class="sub">Параметры компании и правила командировок</div></div>
+    <button class="btn" data-act="save-settings">Сохранить</button></div>
+  <div class="set-grid">
+    <div class="card"><h3>Компания</h3>
+      <div class="field"><label class="f">Название организации</label><input class="inp" data-set="company" value="${h(s.company)}"></div>
+      <div class="field"><label class="f">Город отправления по умолчанию</label><input class="inp" data-set="homeCity" list="cities2" value="${h(s.homeCity)}"><datalist id="cities2">${Object.keys(CITIES).map(c=>`<option value="${h(c)}">`).join('')}</datalist></div>
+      <div class="field" style="margin-bottom:0"><label class="f">Имя текущего пользователя</label><input class="inp" data-set="userName" value="${h(s.userName)}"><div class="hint">Отображается в истории согласований</div></div></div>
+    <div class="card"><h3>Нормы расходов</h3>
+      ${num('perDiem','Суточные, ₽ в день','Применяются к новым заявкам')}
+      ${num('hotelLimit','Лимит проживания, ₽ за ночь')}
+      ${num('annualLimit','Годовой лимит на сотрудника, ₽','Значение по умолчанию для новых сотрудников')}</div>
+    <div class="card"><h3>Согласование</h3>
+      ${sw('autoApprove','Автоматически согласовывать недорогие поездки')}
+      <div class="field" style="margin-top:12px">${num('autoLimit','Порог автосогласования, ₽').replace('<div class="field">','<div>')}</div></div>
+    <div class="card"><h3>Уведомления</h3>
+      ${sw('notifyEmail','Письма о новых заявках')}${sw('notifyApproval','Уведомлять сотрудника о решении')}
+      ${sw('notifyReminder','Напоминание за 3 дня до поездки')}${sw('notifyReport','Напоминание сдать авансовый отчёт')}</div>
+  </div>
+  <div class="card" style="margin-top:18px"><div class="card-head"><div><h3 style="margin-bottom:4px">Демо-данные</h3><div class="small muted">Изменения хранятся в этом браузере. Сброс вернёт исходный набор сотрудников и командировок.</div></div>
+    <button class="btn danger" data-act="reset-data">Сбросить данные</button></div></div>`;
+}
+
+/* ============ router ============ */
+function currentView(){
+  const raw = (location.hash || '#home').slice(1);
+  const m = raw.match(/^employee-(\d+)$/);
+  if (m) return {v:'dossier', id:+m[1]};
+  return {v: ['home','trips','new','employees','reports','config'].includes(raw) ? raw : 'home'};
+}
+let lastView = '';
+function render(){
+  const {v, id} = currentView();
+  const key = v + (id||'');
+  if (key !== lastView) { if (v === 'dossier') ui.dosTab = 'overview'; window.scrollTo(0,0); }
+  lastView = key;
+  const views = {home:viewHome, trips:viewTrips, new:viewForm, employees:viewEmployees, reports:viewReports, config:viewConfig, dossier:() => viewDossier(id)};
+  $('#main').innerHTML = views[v]();
+  const navKey = v === 'new' ? 'trips' : v === 'dossier' ? 'employees' : v;
+  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('active', a.dataset.view === navKey));
+  if (v === 'new') renderSummary();
+  $('#sidebar').classList.remove('open'); document.querySelector('.backdrop').classList.remove('open');
+  const titles = {home:'Главная', trips:'Командировки', new:'Новая командировка', employees:'Сотрудники', reports:'Отчёты', config:'Настройки', dossier:'Досье'};
+  document.title = titles[v] + ' — TravelFlow';
+  if (ui.pendingTrip) { const pid = ui.pendingTrip; ui.pendingTrip = null; tripModal(pid); }
+}
+function go(view){ if (location.hash === '#'+view) render(); else location.hash = '#'+view; }
+function after(id){ save(); render(); if (id) tripModal(id); }
+
+/* ============ actions ============ */
+const ACT = {
+  'noop': (el,id,e) => e.stopPropagation(),
+  'go': el => go(el.dataset.to),
+  'menu-toggle': () => { $('#sidebar').classList.toggle('open'); document.querySelector('.backdrop').classList.toggle('open'); },
+  'close-modal': () => closeModal(),
+  'confirm-ok': () => {
+    const inp = $('#cfInput');
+    if (inp && !inp.value.trim()) { $('#cfField').classList.add('bad'); return; }
+    const fn = onConfirm; const val = inp ? inp.value.trim() : null; closeModal(); fn && fn(val);
+  },
+  'new-trip': el => { closeModal(); ui.form = blankForm(el.dataset.emp); go('new'); },
+  'trip-filter': el => { ui.tripFilter = el.dataset.k; ui.tripSearch = ''; go('trips'); },
+  'open-trip': (el,id) => tripModal(id),
+  'approve': (el,id) => { const t = trip(id); t.state = 'approved'; t.history.push({d:T, t:'Согласовано: ' + state.settings.userName}); toast('Командировка согласована','ok'); const inModal = !!$('#overlay'); save(); render(); if (inModal) tripModal(id); },
+  'reject': (el,id) => confirmBox({title:'Отклонить заявку', text:`Командировка ${tripNo(trip(id))}: ${h(nameShort(emp(trip(id).emp)))}, ${route(trip(id))}. Укажите причину — её увидит сотрудник.`, ok:'Отклонить', danger:true, input:true, placeholder:'Причина отклонения',
+    then: r => { const t = trip(id); t.state = 'rejected'; t.reason = r; t.history.push({d:T, t:'Отклонено: ' + r}); toast('Заявка отклонена','bad'); after(id); }}),
+  'submit': (el,id) => { submitTrip(trip(id)); after(id); },
+  'cancel-trip': (el,id) => confirmBox({title:'Отменить поездку?', text:'Командировка будет отменена, бюджет освободится.', ok:'Отменить поездку', danger:true,
+    then: () => { const t = trip(id); t.state = 'cancelled'; t.history.push({d:T, t:'Командировка отменена'}); toast('Поездка отменена'); after(id); }}),
+  'finish-trip': (el,id) => confirmBox({title:'Завершить досрочно?', text:'Дата окончания будет изменена на сегодня, смета пересчитается.', ok:'Завершить',
+    then: () => { const t = trip(id); t.end = T < t.start ? t.start : addDays(T,-1) < t.start ? t.start : addDays(T,-1); t.history.push({d:T, t:'Командировка завершена досрочно'}); toast('Командировка завершена','ok'); after(id); }}),
+  'delete-trip': (el,id) => confirmBox({title:'Удалить заявку?', text:`Командировка ${tripNo(trip(id))} будет удалена без возможности восстановления.`, ok:'Удалить', danger:true,
+    then: () => { state.trips = state.trips.filter(t => t.id !== id); toast('Заявка удалена'); save(); render(); }}),
+  'edit-trip': (el,id) => { const t = trip(id); closeModal(); ui.form = {id:t.id, emp:String(t.emp), from:t.from, to:t.to==='—'?'':t.to, start:t.start, end:t.end, purpose:t.purpose, transport:t.transport, tickets:t.tickets, hotelRate:t.hotelRate, perDiem:t.perDiem, comment:t.comment, touched:true}; go('new'); },
+  'set-fact': (el,id) => { const v = +$('#factInput').value; if (!$('#factInput').value || v < 0) { $('#factField').classList.add('bad'); return; }
+    const t = trip(id); t.fact = v; t.history.push({d:T, t:'Авансовый отчёт принят: ' + money(v)}); toast('Фактические расходы сохранены','ok'); after(id); },
+  'open-doc-trip': (el,id) => docModal(id,'report'),
+  'open-doc': (el,id) => docModal(id, el.dataset.kind),
+  'copy-doc': async () => { try { await navigator.clipboard.writeText($('#docPaper').innerText); toast('Текст документа скопирован','ok'); } catch(e) { toast('Не удалось скопировать — выделите текст вручную','bad'); } },
+  'copy-csv': async () => { const ta = $('#csvText'); try { await navigator.clipboard.writeText(ta.value); toast('CSV скопирован','ok'); } catch(e) { ta.select(); toast('Текст выделен — скопируйте вручную','bad'); } },
+  'export-csv': () => exportCsv(),
+  'form-submit': () => saveForm(false),
+  'form-draft': () => saveForm(true),
+  'form-cancel': () => { const id = ui.form?.id; ui.form = null; if (id) ui.pendingTrip = id; go('trips'); },
+  'open-emp': (el,id) => { closeModal(); closeMenu(); location.hash = '#employee-' + id; },
+  'emp-menu': (el,id) => openMenu(el, [
+    {act:'open-emp', id, label:'Открыть досье'}, {act:'menu-new-trip', id, label:'Новая командировка'},
+    {act:'edit-emp', id, label:'Изменить данные'}, {act:'delete-emp', id, label:'Удалить сотрудника', cls:'del'}]),
+  'menu-new-trip': (el,id) => { closeMenu(); ui.form = blankForm(id); go('new'); },
+  'new-emp': () => empForm(null),
+  'edit-emp': (el,id) => { closeMenu(); empForm(id); },
+  'save-emp': el => saveEmp(+el.dataset.id || null),
+  'delete-emp': (el,id) => { closeMenu(); const e = emp(id); const n = state.trips.filter(t => t.emp === id).length;
+    confirmBox({title:'Удалить сотрудника?', text:`${h(fio(e))} будет удалён(а) из системы${n ? `, вместе с ${n} ${plural(n,['командировкой','командировками','командировками'])}` : ''}.`, ok:'Удалить', danger:true,
+      then: () => { state.employees = state.employees.filter(x => x.id !== id); state.trips = state.trips.filter(t => t.emp !== id); save(); toast('Сотрудник удалён'); go('employees'); }}); },
+  'dos-tab': el => { ui.dosTab = el.dataset.k; render(); },
+  'save-access': (el,id) => { const e = emp(id); const old = e.role;
+    e.role = $('#accRole').value; e.perms = [...document.querySelectorAll('[data-perm]')].filter(x => x.checked).map(x => x.dataset.perm); e.limit = +$('#accLimit').value || 0;
+    e.log.push({d:T, t: old !== e.role ? `Роль изменена: ${ROLES[old]} → ${ROLES[e.role]}` : 'Права доступа обновлены'}); save(); toast('Доступ обновлён','ok'); render(); },
+  'save-settings': () => { const s = state.settings;
+    document.querySelectorAll('[data-set]').forEach(el => { const k = el.dataset.set; s[k] = el.type === 'checkbox' ? el.checked : el.type === 'number' ? (+el.value||0) : el.value.trim() || s[k]; });
+    save(); renderUser(); toast('Настройки сохранены','ok'); },
+  'reset-data': () => confirmBox({title:'Сбросить данные?', text:'Все изменения будут удалены, вернутся исходные демо-данные.', ok:'Сбросить', danger:true,
+    then: () => { state = seed(); save(); ui.form = null; renderUser(); toast('Данные сброшены'); go('home'); }})
+};
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.menu') && !e.target.closest('[data-act="emp-menu"]')) closeMenu();
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  if (el.tagName === 'A' && el.dataset.act !== 'noop') e.preventDefault();
+  const fn = ACT[el.dataset.act]; if (fn) fn(el, el.dataset.id ? +el.dataset.id : null, e);
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.field) formInput(el);
+  if (el.dataset.search === 'trips') { ui.tripSearch = el.value; const l = filteredTrips(); $('#tripsTable').innerHTML = tripTable(l) + `<div class="small muted" style="margin-top:10px">Показано: ${l.length} · на сумму ${money(l.reduce((a,t)=>a+cost(t).total,0))}</div>`; }
+  if (el.dataset.search === 'emps') { ui.empSearch = el.value; $('#empTable').innerHTML = empTableHtml(); }
+  if (el.closest('.field.bad') && !el.dataset.field) el.closest('.field').classList.remove('bad');
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.field) formInput(el);
+  if (el.dataset.sel === 'tripSort') { ui.tripSort = el.value; render(); }
+  if (el.dataset.sel === 'empDept') { ui.empDept = el.value; $('#empTable').innerHTML = empTableHtml(); }
+  if (el.dataset.sel === 'period') { ui.period = el.value; render(); }
+  if (el.id === 'accRole') { const p = ROLE_PERMS[el.value]; document.querySelectorAll('[data-perm]').forEach(x => x.checked = p.includes(x.dataset.perm)); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMenu(); closeModal(); } });
+window.addEventListener('hashchange', () => { closeModal(); render(); });
+window.addEventListener('scroll', closeMenu, true);
+
+function renderUser(){
+  const n = state.settings.userName || 'Пользователь';
+  const ini = n.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+  $('#sideUser').innerHTML = `<span class="av" style="background:var(--blue)">${h(ini)}</span><div><b>${h(n)}</b><span>${h(state.settings.company)}</span></div>`;
+}
+$('#logoTop').innerHTML = LOGO; $('#logoSide').innerHTML = LOGO;
+renderUser(); render();
+</script>
+</body>
+</html>
