@@ -1,4 +1,4 @@
-"""Локальный сервер TravelFlow. Python 3.10+, стандартная библиотека."""
+
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, parse_qs, urlencode
 from http.cookies import SimpleCookie
