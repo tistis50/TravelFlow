@@ -1,7 +1,4 @@
-"""Предварительная проверка HTTP и SQLite. Запуск: python test_module.py.
-Необходимы requests и beautifulsoup4; для снимков --capture нужен playwright и Chromium.
-Тестовая БД изолирована от рабочей. Снимки — автономный рендер фактических HTTP-ответов.
-"""
+
 import argparse, sys, tempfile, subprocess, time, sqlite3, shutil
 from pathlib import Path
 import requests
