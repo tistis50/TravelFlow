@@ -21,7 +21,6 @@ input,select,textarea{font:inherit;color:inherit}
 a{color:var(--blue)}
 .app{display:flex;min-height:100vh}
 
-/* sidebar */
 .sidebar{width:236px;background:#fff;flex-shrink:0;padding:22px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;z-index:30}
 .logo{display:flex;align-items:center;gap:4px;font-weight:800;font-size:21px;letter-spacing:-.4px;padding:0 4px 30px;color:#111;text-decoration:none}
 .logo svg{width:48px;height:34px;flex-shrink:0}
@@ -112,7 +111,6 @@ label.f{display:block;font-size:13px;margin-bottom:5px;color:#222}
 .arrow-row .ar{text-align:center;font-size:20px;color:#333}
 .hint{font-size:11px;color:var(--muted);margin-top:4px}
 
-/* trip form */
 .form-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:20px;align-items:start}
 .summary{position:sticky;top:20px}
 .summary h3{font-size:17px;font-weight:700;margin:0 0 10px}
@@ -123,7 +121,6 @@ label.f{display:block;font-size:13px;margin-bottom:5px;color:#222}
 .okbox{background:#E9F7EB;color:#2b6b32;border-radius:8px;padding:8px 10px;font-size:12px;margin-top:10px}
 .summary .btn{margin-top:10px}
 
-/* dossier */
 .dos-head{display:flex;gap:16px;align-items:center;margin:8px 0 14px}
 .dos-av{width:86px;height:86px;border-radius:10px;font-size:28px}
 .dos-head .nm{font-weight:600;font-size:15px}
@@ -156,7 +153,6 @@ label.f{display:block;font-size:13px;margin-bottom:5px;color:#222}
 .timeline li:last-child:after{display:none}
 .timeline .d{font-size:11px;color:var(--muted)}
 
-/* reports */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
 .kpi{background:#fff;border-radius:12px;padding:14px 16px}
 .kpi .l{font-size:12px;color:#555}
@@ -179,7 +175,6 @@ label.f{display:block;font-size:13px;margin-bottom:5px;color:#222}
 .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
 .legend b{margin-left:auto;font-weight:600}
 
-/* settings */
 .set-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .set-grid .card{margin-bottom:0}
 .switch{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);gap:12px;font-size:13px}
@@ -188,7 +183,6 @@ label.f{display:block;font-size:13px;margin-bottom:5px;color:#222}
 .switch input:checked{background:var(--blue)}
 .switch input:checked:before{left:21px}
 
-/* modal */
 .overlay{position:fixed;inset:0;background:rgba(15,30,50,.45);display:flex;align-items:flex-start;justify-content:center;padding:40px 14px;z-index:100;overflow-y:auto;animation:fade .15s}
 .modal{background:#fff;border-radius:16px;width:100%;max-width:620px;padding:22px 24px;box-shadow:0 20px 50px rgba(0,0,0,.2);animation:pop .18s}
 .modal.wide{max-width:780px}
@@ -225,7 +219,6 @@ label.f{display:block;font-size:13px;margin-bottom:5px;color:#222}
 @keyframes fade{from{opacity:0}}
 @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}}
 
-/* responsive */
 @media (max-width:1100px){
   .stats,.kpis{grid-template-columns:repeat(2,1fr)}
   .dos-grid{grid-template-columns:1fr}
@@ -282,7 +275,6 @@ label.f{display:block;font-size:13px;margin-bottom:5px;color:#222}
 <div class="toast-wrap" id="toasts"></div>
 
 <script>
-/* ============ helpers ============ */
 const LOGO = `<svg viewBox="0 0 48 34" aria-hidden="true"><path fill="#111" d="M3 27.5c6-1.2 12.5-3.6 19.5-7.4l10.8-6.2c4.3-2.5 8.5-4.4 11-4.6 1.4-.1 1.6.9.6 1.9-1.7 1.7-5.6 4.2-9.6 6.4L24 23.8l-3.6 7.6-2.7.8 1.6-6.5-7 2.9-2.8 2.6-1.8.3 1.1-3.3c-2 .4-4 .3-5.8-.7zM14.5 15.6l2.2-1.3 9.4 1.1-4.6 2.6zM27 9.6l2.5-1.4 3.2 2.6-2.6 1.4z"/></svg>TravelFlow`;
 const $ = s => document.querySelector(s);
 const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -317,7 +309,6 @@ const STATUS = {
 };
 const AV_COLORS = ['#1E6FD9','#6E7ED6','#2FA58B','#E07B39','#C2508F','#4C9BD6','#8A63D2','#3C8D5A','#D35A5A','#5A6B80'];
 
-/* ============ seed data ============ */
 function seed(){
   const settings = {company:'ООО «ТрэвелФлоу»', homeCity:'Уфа', perDiem:1600, hotelLimit:6500, annualLimit:500000, autoApprove:false, autoLimit:15000,
     notifyEmail:true, notifyApproval:true, notifyReminder:false, notifyReport:true, userName:'Администратор системы'};
@@ -337,7 +328,6 @@ function seed(){
     id,last,first,middle,gender,birth,dept,position,email,phone,city:'Уфа',hired,card4,citizenship:'РФ',role,
     perms:[...ROLE_PERMS[role]], limit, restrictions:'Отсутствуют', log:[]
   }));
-  // [emp, to, startOffset, days, purpose, transport, tickets, hotelRate, state]
   const R = [
     [1,'Санкт-Петербург',-18,31,'Проект редизайна офиса партнёра','Самолёт',18400,5800,'approved'],
     [2,'Сочи',-9,6,'Монтаж оборудования на объекте','Самолёт',16200,4500,'approved'],
@@ -383,7 +373,6 @@ function seed(){
   return {settings, employees, trips, seq:{trip:trips.length, emp:employees.length}};
 }
 
-/* ============ state ============ */
 const LS = 'travelflow-v1';
 let state;
 try { state = JSON.parse(localStorage.getItem(LS)); } catch(e) { state = null; }
@@ -424,7 +413,6 @@ function estimateTickets(to, transport){
   return Math.round((k[0] + km*k[1]) / 100) * 100;
 }
 
-/* ============ toasts / modal / menu ============ */
 function toast(msg, kind=''){
   const el = document.createElement('div'); el.className = 'toast ' + kind; el.textContent = msg;
   $('#toasts').appendChild(el); setTimeout(() => el.remove(), 2800);
@@ -458,7 +446,6 @@ function openMenu(btn, items){
   m.style.left = Math.max(8,left) + 'px'; m.style.top = top + 'px';
 }
 
-/* ============ shared fragments ============ */
 function tripTable(list, {showPurpose=true, showEmp=true, showNo=true} = {}){
   if (!list.length) return `<div class="empty">Командировок не найдено</div>`;
   return `<div class="table-wrap"><table><thead><tr>
@@ -472,7 +459,6 @@ function tripTable(list, {showPurpose=true, showEmp=true, showNo=true} = {}){
     </tbody></table></div>`;
 }
 
-/* ============ views ============ */
 function viewHome(){
   const c = s => state.trips.filter(t => status(t) === s).length;
   const y = TODAY.getFullYear(), m = TODAY.getMonth();
@@ -574,7 +560,6 @@ function tripModal(id){
     <div class="m-actions">${actions}</div>`);
 }
 
-/* ---- trip form ---- */
 function blankForm(empId){
   const s = state.settings, start = addDays(T,7);
   return {id:null, emp:empId?String(empId):'', from:s.homeCity, to:'', start, end:addDays(start,4), purpose:'', transport:'Поезд', tickets:0, hotelRate:s.hotelLimit, perDiem:s.perDiem, comment:'', touched:false};
@@ -688,7 +673,6 @@ function submitTrip(t, quiet){
   } else { t.state = 'approval'; toast(quiet ? 'Заявка отправлена на согласование' : 'Отправлено на согласование', 'ok'); }
 }
 
-/* ---- employees ---- */
 function viewEmployees(){
   return `
   <div class="page-head"><div><h1>Сотрудники</h1><div class="sub">${state.employees.length} ${plural(state.employees.length,['сотрудник','сотрудника','сотрудников'])} в компании</div></div>
@@ -836,7 +820,6 @@ function saveEmp(id){
   if (!id) { ui.dosTab = 'overview'; location.hash = '#employee-' + e.id; } else render();
 }
 
-/* ---- documents ---- */
 function docModal(id, kind){
   const t = trip(id), e = emp(t.emp), c = cost(t), s = state.settings;
   const dir = state.employees.find(x => x.position === 'Генеральный директор');
@@ -877,7 +860,6 @@ function docModal(id, kind){
     <div class="m-actions"><button class="btn ghost" data-act="open-trip" data-id="${t.id}">Открыть командировку</button><button class="btn" data-act="copy-doc">Скопировать текст</button></div>`, 'wide');
 }
 
-/* ---- reports ---- */
 function periodRange(p){
   const y = TODAY.getFullYear(), m = TODAY.getMonth(), q = Math.floor(m/3);
   if (p === 'month') return [iso(new Date(y,m,1)), iso(new Date(y,m+1,0)), `${cap(MONTHS[m])} ${y}`];
@@ -949,7 +931,6 @@ function exportCsv(){
     <div class="m-actions"><button class="btn ghost" data-act="close-modal">Закрыть</button><button class="btn" data-act="copy-csv">Скопировать</button></div>`, 'wide');
 }
 
-/* ---- settings ---- */
 function viewConfig(){
   const s = state.settings;
   const num = (k,l,hint='') => `<div class="field"><label class="f">${l}</label><input class="inp" type="number" min="0" step="100" data-set="${k}" value="${s[k]}">${hint?`<div class="hint">${hint}</div>`:''}</div>`;
@@ -977,7 +958,6 @@ function viewConfig(){
     <button class="btn danger" data-act="reset-data">Сбросить данные</button></div></div>`;
 }
 
-/* ============ router ============ */
 function currentView(){
   const raw = (location.hash || '#home').slice(1);
   const m = raw.match(/^employee-(\d+)$/);
@@ -1003,7 +983,6 @@ function render(){
 function go(view){ if (location.hash === '#'+view) render(); else location.hash = '#'+view; }
 function after(id){ save(); render(); if (id) tripModal(id); }
 
-/* ============ actions ============ */
 const ACT = {
   'noop': (el,id,e) => e.stopPropagation(),
   'go': el => go(el.dataset.to),
